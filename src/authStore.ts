@@ -21,7 +21,7 @@ type AuthState<TUser extends User = User> = {
   setError: (error: Error) => void
   loginWithRedirect: (loginOptions?: RedirectLoginOptions) => Promise<void>
   logout: (logoutOptions?: LogoutOptions) => Promise<void>
-  getAccessTokenSilently: (getTokenOptions: GetTokenSilentlyOptions) => Promise<string>
+  getAccessTokenSilently: (getTokenOptions?: GetTokenSilentlyOptions) => Promise<string>
   getIdTokenClaims: () => Promise<IdToken | undefined>
 }
 
