@@ -30,6 +30,12 @@ export function Nav() {
           >
             Protected by loader
           </Link>
+          <Link
+            to="/invitation"
+            className={`nav-item nav-link${pathname === '/invitation' ? ' active' : ''}`}
+          >
+            Invitation landing
+          </Link>
         </div>
       </div>
 
