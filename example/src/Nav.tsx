@@ -7,6 +7,7 @@ export function Nav() {
   const user = useAuth(state => state.user)
   const logout = useAuth(state => state.logout)
   const loginWithRedirect = useAuth(state => state.loginWithRedirect)
+  const getAccessTokenSilently = useAuth(state => state.getAccessTokenSilently)
 
   const { pathname } = useLocation()
 
@@ -38,6 +39,13 @@ export function Nav() {
           <span id="hello">Hello, {user?.name}!</span>{' '}
           <button className="btn btn-outline-secondary" id="logout" onClick={() => logout()}>
             logout
+          </button>
+          <button
+            className="btn btn-outline-secondary"
+            id="get-token"
+            onClick={() => getAccessTokenSilently().then(console.log).catch(console.log)}
+          >
+            get access token
           </button>
         </div>
       ) : (
