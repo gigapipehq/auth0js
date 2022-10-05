@@ -31,10 +31,10 @@ export function Nav() {
             Protected by loader
           </Link>
           <Link
-            to="/invitation"
+            to="/auth0"
             className={`nav-item nav-link${pathname === '/invitation' ? ' active' : ''}`}
           >
-            Invitation landing
+            Application login page
           </Link>
         </div>
       </div>

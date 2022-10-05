@@ -1,25 +1,27 @@
-import { useEffect } from 'react'
-import { useAuth } from './auth'
+import { type LoaderFunctionArgs } from 'react-router-dom'
+import { authStore } from './auth'
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const url = new URL(request.url)
+  const invitation = url.searchParams.get('invitation')
+  const organization = url.searchParams.get('organization')
+  const { loginWithRedirect } = authStore.getState()
+  if (invitation && organization) {
+    await loginWithRedirect({
+      authorizationParams: {
+        organization,
+        invitation,
+      },
+    })
+  }
+}
 
 export default function Invitation() {
-  const loginWithRedirect = useAuth(state => state.loginWithRedirect)
-
-  useEffect(() => {
-    const url = window.location.href
-    const inviteMatches = url.match(/invitation=([^&]+)/)
-    const orgMatches = url.match(/organization=([^&]+)/)
-
-    if (inviteMatches && orgMatches) {
-      loginWithRedirect({
-        authorizationParams: {
-          organization: orgMatches[1],
-          invitation: inviteMatches[1],
-        },
-      })
-    } else {
-      console.log('No invitation nor organization found in the URL params')
-    }
-  }, [])
-
-  return <div>This is the landing page to accept invitations, you should be redirected soon.</div>
+  return (
+    <div>
+      This is the application's login page. In some scenarios like after user gets an invitation
+      they will be directed here. This page could ommit rendering any component and only use the
+      loader function.
+    </div>
+  )
 }

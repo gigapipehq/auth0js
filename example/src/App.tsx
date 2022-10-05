@@ -10,7 +10,7 @@ import Home from './Home'
 import ProtectedByLoader from './ProtectedByLoader'
 import ProtectedRoute from './ProtectedRoute'
 import Root from './Root'
-import Invitation from './Invitation'
+import Invitation, { loader as invitationLoader } from './Invitation'
 
 if (import.meta.env.DEV) {
   mountStoreDevtool('AuthStore', authStore)
@@ -45,8 +45,9 @@ const router = createBrowserRouter([
         element: <ProtectedByLoader />,
       },
       {
-        path: '/invitation',
+        path: '/auth0',
         element: <Invitation />,
+        loader: invitationLoader,
       },
     ],
   },
