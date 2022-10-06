@@ -1,6 +1,5 @@
 export { default as AuthProvider } from './AuthProvider'
 export { createAuthStore } from './authStore'
-export { loaderWithAuth } from './loaderWithAuth'
 export { default as withAuthRequired } from './withAuthRequired'
 export type {
   Cacheable,

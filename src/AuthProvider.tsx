@@ -1,5 +1,5 @@
-import { User } from '@auth0/auth0-spa-js'
-import { ReactNode, useEffect, useRef } from 'react'
+import { type User } from '@auth0/auth0-spa-js'
+import { type ReactNode, useEffect, useRef } from 'react'
 
 import { type AuthStore } from './authStore'
 import { type AppState } from './types'
@@ -56,6 +56,8 @@ const AuthProvider = (opts: AuthProviderOptions) => {
     onRedirectCallback = defaultOnRedirectCallback,
     authStore,
   } = opts
+  // We can use directly the Zustand's store because we are only accessing the methods and not the state itself.
+  // Checkout `withAuthRequired` for an example that requires access to the useAuth hook.
   const { auth0Client, initialised, setError } = authStore.getState()
 
   const didInitialise = useRef(false)

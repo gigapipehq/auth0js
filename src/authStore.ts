@@ -7,7 +7,7 @@ import {
   type User,
   Auth0Client,
 } from '@auth0/auth0-spa-js'
-import { createStore } from 'zustand'
+import { type StoreApi, type UseBoundStore, createStore } from 'zustand'
 
 import { tokenError } from './utils'
 
@@ -27,7 +27,7 @@ type AuthState<TUser extends User = User> = {
 
 /**
  *  Function factory to create the Zustand store that contains all the state and the different auth methods.
- *  Use this store outside the React tree (ie. `const { isAuthenticated, loginWithRedirect } = authStore.getState()`)
+ *  Use this store outside the React tree (ie. `const { isAuthenticated, loginWithRedirect } = authStore.getState()`) or if you only need access to its methods.
  * ```js
  * const authStore = createAuthStore({
  *  domain: import.meta.env.VITE_AUTH0_DOMAIN,
@@ -38,8 +38,10 @@ type AuthState<TUser extends User = User> = {
  *    redirect_uri: window.location.origin,
  *  },
  * }
+ * ```
  *
  * Then you can use the `createAuthHook` function to create a custom hook for easy access inside React components
+ * ```js
  * const useAuth = createAuthHook(authStore)
  * ```
  */
@@ -90,3 +92,4 @@ export const createAuthStore = (options: Auth0ClientOptions) =>
   }))
 
 export type AuthStore = ReturnType<typeof createAuthStore>
+export type UseAuthHook = UseBoundStore<StoreApi<AuthState>>

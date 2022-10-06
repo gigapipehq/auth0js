@@ -1,7 +1,7 @@
-import { RedirectLoginOptions, User } from '@auth0/auth0-spa-js'
-import { ComponentType, useEffect } from 'react'
+import { type RedirectLoginOptions, type User } from '@auth0/auth0-spa-js'
+import { type ComponentType, useEffect } from 'react'
 
-import { type AuthStore } from './authStore'
+import { type UseAuthHook } from './authStore'
 import { defaultReturnTo } from './utils'
 
 const defaultOnRedirecting = () => <>Redirecting...</>
@@ -59,21 +59,13 @@ export interface WithAuthenticationRequiredOptions {
    */
   claimCheck?: (claims?: User) => boolean
   /**
-   * Zustand store that contains all the state and the different auth methods. Created with `createAuthStore`
+   * Zustand hook that give us reactive access to all the state and the different auth methods. Created with `createAuthHook`
    *
    * ```js
-   * const authStore = createAuthStore({
-   *  domain: import.meta.env.VITE_AUTH0_DOMAIN,
-   *  clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
-   *  useRefreshTokens: true,
-   *  authorizationParams: {
-   *    audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-   *    redirect_uri: window.location.origin,
-   *  },
-   * }
+   * const useAuth = createAuthHook(authStore)
    * ```
    */
-  authStore: AuthStore
+  useAuth: UseAuthHook
 }
 
 /**
@@ -90,14 +82,17 @@ const withAuthRequired = <P extends object>(
 ) =>
   function WithAuthenticationRequired(props: P): JSX.Element {
     const {
-      authStore,
+      useAuth,
       loginOptions,
       returnTo = defaultReturnTo,
       onRedirecting = defaultOnRedirecting,
       claimCheck = (): boolean => true,
     } = options
 
-    const { loginWithRedirect, isLoading, isAuthenticated, user } = authStore.getState()
+    const isAuthenticated = useAuth(state => state.isAuthenticated)
+    const isLoading = useAuth(state => state.isLoading)
+    const user = useAuth(state => state.user)
+    const loginWithRedirect = useAuth(state => state.loginWithRedirect)
 
     /**
      * The route is authenticated if the user has valid auth and there are no
