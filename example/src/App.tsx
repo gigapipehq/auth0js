@@ -1,13 +1,13 @@
 import './App.css'
 
-import { AuthProvider, loaderWithAuth, withAuthRequired } from '@gigapipe/auth0-react'
+import { AuthProvider, withAuthRequired } from '@gigapipe/auth0-react'
 
-import { createBrowserRouter, json, LoaderFunctionArgs, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { mountStoreDevtool } from 'simple-zustand-devtools'
 
-import { authStore } from './auth'
+import { authStore, useAuth } from './auth'
 import Home from './Home'
-import ProtectedByLoader from './ProtectedByLoader'
+import ProtectedByLoader, { loader as protectedRouteLoader } from './ProtectedByLoader'
 import ProtectedRoute from './ProtectedRoute'
 import Root from './Root'
 import Invitation, { loader as invitationLoader } from './Invitation'
@@ -16,7 +16,7 @@ if (import.meta.env.DEV) {
   mountStoreDevtool('AuthStore', authStore)
 }
 
-const Protected = withAuthRequired(ProtectedRoute, { returnTo: '/protected', authStore })
+const Protected = withAuthRequired(ProtectedRoute, { returnTo: '/protected', useAuth })
 
 const router = createBrowserRouter([
   {
@@ -33,15 +33,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/protected-by-loader',
-        loader: async ({ request }: LoaderFunctionArgs) => {
-          const returnTo = new URL(request.url).pathname
-          console.log('Before checking auth')
-          // TODO: solve the issue of the loader execunting completly while the loginWithRedirect is happening. Maybe using pop-up for this scenarios?
-          await loaderWithAuth({ authStore, returnTo })
-          console.log('After checking auth')
-
-          return json('PAAAAAAAAAA')
-        },
+        loader: protectedRouteLoader,
         element: <ProtectedByLoader />,
       },
       {
@@ -61,7 +53,7 @@ function App() {
   const onRedirectCallback = (appState: any) => {
     // This is kind of a hack because the navigate method in the router object is private and not intended for public use.
     // Currently this is the only way to wrap the RouterProvider with the AuthProvider and have a custom onRedirectCallback
-    router.navigate((appState && appState.returnTo) || window.location.pathname)
+    router.navigate((appState && appState.returnTo) || window.location.pathname, { replace: true })
   }
 
   return (
