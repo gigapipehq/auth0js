@@ -117,22 +117,6 @@ var createAuthStore = (options) => createStore()((set, get) => ({
   }
 }));
 
-// src/loaderWithAuth.ts
-async function loaderWithAuth(options) {
-  const { authStore, loginOptions, returnTo = defaultReturnTo } = options;
-  const { isAuthenticated, loginWithRedirect } = authStore.getState();
-  if (!isAuthenticated) {
-    const opts = {
-      ...loginOptions,
-      appState: {
-        ...loginOptions && loginOptions.appState,
-        returnTo: typeof returnTo === "function" ? returnTo() : returnTo
-      }
-    };
-    await loginWithRedirect(opts);
-  }
-}
-
 // src/withAuthRequired.tsx
 import { useEffect as useEffect2 } from "react";
 import { Fragment as Fragment2, jsx as jsx2 } from "react/jsx-runtime";
@@ -141,13 +125,16 @@ var defaultOnRedirecting = () => /* @__PURE__ */ jsx2(Fragment2, {
 });
 var withAuthRequired = (Component, options) => function WithAuthenticationRequired(props) {
   const {
-    authStore,
+    useAuth,
     loginOptions,
     returnTo = defaultReturnTo,
     onRedirecting = defaultOnRedirecting,
     claimCheck = () => true
   } = options;
-  const { loginWithRedirect, isLoading, isAuthenticated, user } = authStore.getState();
+  const isAuthenticated = useAuth((state) => state.isAuthenticated);
+  const isLoading = useAuth((state) => state.isLoading);
+  const user = useAuth((state) => state.user);
+  const loginWithRedirect = useAuth((state) => state.loginWithRedirect);
   const routeIsAuthenticated = isAuthenticated && claimCheck(user);
   useEffect2(() => {
     if (isLoading || routeIsAuthenticated) {
@@ -176,7 +163,6 @@ export {
   AuthProvider_default as AuthProvider,
   default2 as createAuthHook,
   createAuthStore,
-  loaderWithAuth,
   withAuthRequired_default as withAuthRequired
 };
 //# sourceMappingURL=index.mjs.map

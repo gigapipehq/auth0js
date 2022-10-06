@@ -29,7 +29,6 @@ __export(src_exports, {
   AuthProvider: () => AuthProvider_default,
   createAuthHook: () => import_zustand2.default,
   createAuthStore: () => createAuthStore,
-  loaderWithAuth: () => loaderWithAuth,
   withAuthRequired: () => withAuthRequired_default
 });
 module.exports = __toCommonJS(src_exports);
@@ -151,22 +150,6 @@ var createAuthStore = (options) => (0, import_zustand.createStore)()((set, get) 
   }
 }));
 
-// src/loaderWithAuth.ts
-async function loaderWithAuth(options) {
-  const { authStore, loginOptions, returnTo = defaultReturnTo } = options;
-  const { isAuthenticated, loginWithRedirect } = authStore.getState();
-  if (!isAuthenticated) {
-    const opts = {
-      ...loginOptions,
-      appState: {
-        ...loginOptions && loginOptions.appState,
-        returnTo: typeof returnTo === "function" ? returnTo() : returnTo
-      }
-    };
-    await loginWithRedirect(opts);
-  }
-}
-
 // src/withAuthRequired.tsx
 var import_react2 = require("react");
 var import_jsx_runtime2 = require("react/jsx-runtime");
@@ -175,13 +158,16 @@ var defaultOnRedirecting = () => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(im
 });
 var withAuthRequired = (Component, options) => function WithAuthenticationRequired(props) {
   const {
-    authStore,
+    useAuth,
     loginOptions,
     returnTo = defaultReturnTo,
     onRedirecting = defaultOnRedirecting,
     claimCheck = () => true
   } = options;
-  const { loginWithRedirect, isLoading, isAuthenticated, user } = authStore.getState();
+  const isAuthenticated = useAuth((state) => state.isAuthenticated);
+  const isLoading = useAuth((state) => state.isLoading);
+  const user = useAuth((state) => state.user);
+  const loginWithRedirect = useAuth((state) => state.loginWithRedirect);
   const routeIsAuthenticated = isAuthenticated && claimCheck(user);
   (0, import_react2.useEffect)(() => {
     if (isLoading || routeIsAuthenticated) {
@@ -211,7 +197,6 @@ var import_zustand2 = __toESM(require("zustand"));
   AuthProvider,
   createAuthHook,
   createAuthStore,
-  loaderWithAuth,
   withAuthRequired
 });
 //# sourceMappingURL=index.js.map

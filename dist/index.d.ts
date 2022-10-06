@@ -1,7 +1,7 @@
 import { Auth0ClientOptions, User, Auth0Client, RedirectLoginOptions, LogoutOptions, GetTokenSilentlyOptions, IdToken } from '@auth0/auth0-spa-js';
 export { CacheLocation, Cacheable, GetTokenSilentlyOptions, GetTokenWithPopupOptions, ICache, IdToken, InMemoryCache, LocalStorageCache, LogoutOptions, LogoutUrlOptions, PopupConfigOptions, PopupLoginOptions, User } from '@auth0/auth0-spa-js';
 import { ReactNode, ComponentType } from 'react';
-import * as zustand from 'zustand';
+import { StoreApi, UseBoundStore } from 'zustand';
 export { default as createAuthHook } from 'zustand';
 
 declare type AuthState<TUser extends User = User> = {
@@ -19,7 +19,7 @@ declare type AuthState<TUser extends User = User> = {
 };
 /**
  *  Function factory to create the Zustand store that contains all the state and the different auth methods.
- *  Use this store outside the React tree (ie. `const { isAuthenticated, loginWithRedirect } = authStore.getState()`)
+ *  Use this store outside the React tree (ie. `const { isAuthenticated, loginWithRedirect } = authStore.getState()`) or if you only need access to its methods.
  * ```js
  * const authStore = createAuthStore({
  *  domain: import.meta.env.VITE_AUTH0_DOMAIN,
@@ -30,13 +30,16 @@ declare type AuthState<TUser extends User = User> = {
  *    redirect_uri: window.location.origin,
  *  },
  * }
+ * ```
  *
  * Then you can use the `createAuthHook` function to create a custom hook for easy access inside React components
+ * ```js
  * const useAuth = createAuthHook(authStore)
  * ```
  */
-declare const createAuthStore: (options: Auth0ClientOptions) => zustand.StoreApi<AuthState<User>>;
+declare const createAuthStore: (options: Auth0ClientOptions) => StoreApi<AuthState<User>>;
 declare type AuthStore = ReturnType<typeof createAuthStore>;
+declare type UseAuthHook = UseBoundStore<StoreApi<AuthState>>;
 
 /**
  * The state of the application before the user was redirected to the login page.
@@ -86,67 +89,6 @@ declare type AuthProviderOptions = {
     authStore: AuthStore;
 };
 declare const AuthProvider: (opts: AuthProviderOptions) => JSX.Element;
-
-declare type LoaderWithAuthOptions = {
-    /**
-     * Zustand store that contains all the state and the different auth methods. Created with `createAuthStore`
-     *
-     * ```js
-     * const authStore = createAuthStore({
-     *  domain: import.meta.env.VITE_AUTH0_DOMAIN,
-     *  clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
-     *  useRefreshTokens: true,
-     *  authorizationParams: {
-     *    audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-     *    redirect_uri: window.location.origin,
-     *  },
-     * }
-     * ```
-     */
-    authStore: AuthStore;
-    /**
-     * ```js
-     *  await loaderWithAuth({
-     *    loginOptions: {
-     *      appState: {
-     *        customProp: 'foo',
-     *      },
-     *    },
-     *  })
-     * ```
-     *
-     * Pass additional login options, like extra `appState` to the login page.
-     * This will be merged with the `returnTo` option used by the `onRedirectCallback` handler.
-     */
-    loginOptions?: RedirectLoginOptions;
-    /**
-     * ```js
-     * await loaderWithAuth({ returnTo: () => window.location.hash.substr(1) })
-     * ```
-     * or
-     *
-     * ```js
-     * const returnTo = new URL(request.url).pathname
-     * await loaderWithAuth({ returnTo })
-     * ```
-     *
-     * Add a path for the `onRedirectCallback` handler to return the user to after login.
-     */
-    returnTo?: string | (() => string);
-};
-/**
- * ```js
- *  loader: async ({ request }: LoaderFunctionArgs) => {
- *    const returnTo = new URL(request.url).pathname
- *    await loaderWithAuth({ useAuth, returnTo });
- *    return json(SOME_DATA)
- *  }
- * ```
- *
- * When you call the function inside a route loader and an anonymous user is tring to access that route
- * they will be redirected to the login page and returned to the page they we're redirected from after login.
- */
-declare function loaderWithAuth(options: LoaderWithAuthOptions): Promise<void>;
 
 /**
  * Options for the withAuthenticationRequired Higher Order Component
@@ -201,21 +143,13 @@ interface WithAuthenticationRequiredOptions {
      */
     claimCheck?: (claims?: User) => boolean;
     /**
-     * Zustand store that contains all the state and the different auth methods. Created with `createAuthStore`
+     * Zustand hook that give us reactive access to all the state and the different auth methods. Created with `createAuthHook`
      *
      * ```js
-     * const authStore = createAuthStore({
-     *  domain: import.meta.env.VITE_AUTH0_DOMAIN,
-     *  clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
-     *  useRefreshTokens: true,
-     *  authorizationParams: {
-     *    audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-     *    redirect_uri: window.location.origin,
-     *  },
-     * }
+     * const useAuth = createAuthHook(authStore)
      * ```
      */
-    authStore: AuthStore;
+    useAuth: UseAuthHook;
 }
 /**
  * ```js
@@ -227,4 +161,4 @@ interface WithAuthenticationRequiredOptions {
  */
 declare const withAuthRequired: <P extends object>(Component: ComponentType<P>, options: WithAuthenticationRequiredOptions) => (props: P) => JSX.Element;
 
-export { AuthProvider, createAuthStore, loaderWithAuth, withAuthRequired };
+export { AuthProvider, createAuthStore, withAuthRequired };
