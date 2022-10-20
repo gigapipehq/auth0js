@@ -4,20 +4,20 @@ import {
   type IdToken,
   type LogoutOptions,
   type RedirectLoginOptions,
-  type User,
   Auth0Client,
 } from '@auth0/auth0-spa-js'
 import { type StoreApi, type UseBoundStore, createStore } from 'zustand'
 
-import { tokenError } from './utils'
+import type { Auth0User, User } from './types'
+import { tokenError, transformSnakeObjectKeysToCamel } from './utils'
 
-type AuthState<TUser extends User = User> = {
+type AuthState = {
   auth0Client: Auth0Client
   isLoading: boolean
   isAuthenticated: boolean
   error?: Error
-  user?: TUser
-  initialised: (user?: User) => void
+  user?: User
+  initialised: (user?: Auth0User) => void
   setError: (error: Error) => void
   loginWithRedirect: (loginOptions?: RedirectLoginOptions) => Promise<void>
   logout: (logoutOptions?: LogoutOptions) => Promise<void>
@@ -54,7 +54,7 @@ export const createAuthStore = (options: Auth0ClientOptions) =>
       set(state => ({
         ...state,
         isAuthenticated: !!user,
-        user,
+        user: user ? transformSnakeObjectKeysToCamel(user) : user,
         isLoading: false,
         error: undefined,
       })),
@@ -76,12 +76,15 @@ export const createAuthStore = (options: Auth0ClientOptions) =>
       } catch (error: any) {
         throw tokenError(error)
       } finally {
-        const user = await auth0Client.getUser()
-        set(state =>
-          state.user?.updated_at === user?.updated_at
-            ? state
-            : { ...state, isAuthenticated: !!user, user },
-        )
+        const auth0User = await auth0Client.getUser<Auth0User>()
+        if (auth0User) {
+          const user = transformSnakeObjectKeysToCamel(auth0User)
+          set(state =>
+            state.user?.updatedAt === user.updatedAt
+              ? state
+              : { ...state, isAuthenticated: !!user, user },
+          )
+        }
       }
       return token
     },

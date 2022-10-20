@@ -1,6 +1,6 @@
-export { default as AuthProvider } from './AuthProvider'
 export { createAuthStore } from './authStore'
-export { default as withAuthRequired } from './withAuthRequired'
+export { authorize, handleRedirectCallback } from './loaderPolicyFunctions'
+export type { User } from './types'
 export type {
   Cacheable,
   CacheLocation,
@@ -14,6 +14,5 @@ export type {
   LogoutUrlOptions,
   PopupConfigOptions,
   PopupLoginOptions,
-  User,
 } from '@auth0/auth0-spa-js'
 export { default as createAuthHook } from 'zustand'

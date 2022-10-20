@@ -1,11 +1,5 @@
 import { OAuthError } from './errors'
-
-const CODE_RE = /[?&]code=[^&]+/
-const STATE_RE = /[?&]state=[^&]+/
-const ERROR_RE = /[?&]error=[^&]+/
-
-export const hasAuthParams = (searchParams = window.location.search): boolean =>
-  (CODE_RE.test(searchParams) || ERROR_RE.test(searchParams)) && STATE_RE.test(searchParams)
+import { type CamelCasedProperties } from './types'
 
 const normalizeErrorFn =
   (fallbackMessage: string) =>
@@ -21,4 +15,28 @@ const normalizeErrorFn =
 
 export const tokenError = normalizeErrorFn('Get access token failed')
 
-export const defaultReturnTo = (): string => `${window.location.pathname}${window.location.search}`
+// For now we default to return the user to the root route after handling the redirect. At some point we could make it customizable.
+export const defaultReturnTo = '/'
+
+export const snakeToCamelCase = (str: string): string =>
+  str.replace(/([-_][a-z0-9])/gi, $1 => $1.toUpperCase().replace('_', ''))
+
+/**
+ * Transform all object keys to camelCase including nested objects and arrays
+ */
+export function transformSnakeObjectKeysToCamel<INPUT extends {}>(
+  data: INPUT,
+): CamelCasedProperties<INPUT> {
+  return Object.fromEntries(
+    Object.entries(data).map(([key, val]) => [snakeToCamelCase(key), processVal(val)]),
+  ) as CamelCasedProperties<INPUT>
+}
+
+/** Utility function to transform recursively the value in the object */
+function processVal(val: unknown): unknown {
+  return typeof val !== 'object' || val === null
+    ? val
+    : Array.isArray(val)
+    ? val.map(processVal)
+    : transformSnakeObjectKeysToCamel(val)
+}
