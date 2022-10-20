@@ -18,7 +18,7 @@ export function Nav() {
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
-      <span className="navbar-brand">@auth0/auth0-react</span>
+      <span className="navbar-brand">@gigapipe/auth0js</span>
       <div className="collapse navbar-collapse">
         <div className="navbar-nav">
           <Link to="/" className={`nav-item nav-link${pathname === '/' ? ' active' : ''}`}>
@@ -28,26 +28,20 @@ export function Nav() {
             to="/protected"
             className={`nav-item nav-link${pathname === '/users' ? ' active' : ''}`}
           >
-            Protected
+            Protected route
           </Link>
           <Link
-            to="/protected-by-loader"
-            className={`nav-item nav-link${pathname === '/users' ? ' active' : ''}`}
-          >
-            Protected by loader
-          </Link>
-          <Link
-            to="/auth0"
+            to="/auth"
             className={`nav-item nav-link${pathname === '/invitation' ? ' active' : ''}`}
           >
-            Application login page
+            Callback route
           </Link>
         </div>
       </div>
 
       {isAuthenticated ? (
         <div>
-          <span id="hello">Hello, {user?.name}!</span>{' '}
+          <span id="hello">Hello, {user?.givenName}!</span>{' '}
           <button className="btn btn-outline-secondary" id="logout" onClick={() => logout()}>
             logout
           </button>

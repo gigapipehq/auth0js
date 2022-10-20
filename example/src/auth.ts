@@ -7,7 +7,7 @@ export const authStore = createAuthStore({
   useRefreshTokensFallback: true,
   authorizationParams: {
     audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-    redirect_uri: window.location.origin,
+    redirect_uri: `${window.location.origin}/auth`,
   },
 })
 

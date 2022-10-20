@@ -1,24 +1,24 @@
 import './App.css'
 
-import { AuthProvider, withAuthRequired } from '@gigapipe/auth0js'
-
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { mountStoreDevtool } from 'simple-zustand-devtools'
 
-import { authStore, useAuth } from './auth'
-import Home from './Home'
-import ProtectedByLoader, { loader as protectedRouteLoader } from './ProtectedByLoader'
-import ProtectedRoute from './ProtectedRoute'
-import Root from './Root'
-import Invitation, { loader as invitationLoader } from './Invitation'
+import { authStore } from './auth'
+import Auth, { loader as authLoader } from './pages/Auth'
+import Home from './pages/Home'
+import ProtectedByLoader, { loader as protectedRouteLoader } from './pages/ProtectedByLoader'
+import Root from './pages/Root'
 
 if (import.meta.env.DEV) {
   mountStoreDevtool('AuthStore', authStore)
 }
 
-const Protected = withAuthRequired(ProtectedRoute, { returnTo: '/protected', useAuth })
-
 const router = createBrowserRouter([
+  {
+    path: '/auth',
+    element: <Auth />,
+    loader: authLoader,
+  },
   {
     path: '/',
     element: <Root />,
@@ -29,17 +29,8 @@ const router = createBrowserRouter([
       },
       {
         path: '/protected',
-        element: <Protected />,
-      },
-      {
-        path: '/protected-by-loader',
         loader: protectedRouteLoader,
         element: <ProtectedByLoader />,
-      },
-      {
-        path: '/auth0',
-        element: <Invitation />,
-        loader: invitationLoader,
       },
     ],
   },
@@ -50,17 +41,7 @@ if (import.meta.hot) {
 }
 
 function App() {
-  const onRedirectCallback = (appState: any) => {
-    // This is kind of a hack because the navigate method in the router object is private and not intended for public use.
-    // Currently this is the only way to wrap the RouterProvider with the AuthProvider and have a custom onRedirectCallback
-    router.navigate((appState && appState.returnTo) || window.location.pathname, { replace: true })
-  }
-
-  return (
-    <AuthProvider onRedirectCallback={onRedirectCallback} authStore={authStore}>
-      <RouterProvider router={router} />
-    </AuthProvider>
-  )
+  return <RouterProvider router={router} />
 }
 
 export default App
