@@ -1,5 +1,8 @@
-// src/AuthProvider.tsx
-import { useEffect, useRef } from "react";
+// src/authStore.ts
+import {
+  Auth0Client
+} from "@auth0/auth0-spa-js";
+import { createStore } from "zustand";
 
 // src/errors.ts
 var OAuthError = class extends Error {
@@ -12,10 +15,6 @@ var OAuthError = class extends Error {
 };
 
 // src/utils.ts
-var CODE_RE = /[?&]code=[^&]+/;
-var STATE_RE = /[?&]state=[^&]+/;
-var ERROR_RE = /[?&]error=[^&]+/;
-var hasAuthParams = (searchParams = window.location.search) => (CODE_RE.test(searchParams) || ERROR_RE.test(searchParams)) && STATE_RE.test(searchParams);
 var normalizeErrorFn = (fallbackMessage) => (error) => {
   if ("error" in error) {
     return new OAuthError(error.error, error.error_description);
@@ -26,56 +25,18 @@ var normalizeErrorFn = (fallbackMessage) => (error) => {
   return new Error(fallbackMessage);
 };
 var tokenError = normalizeErrorFn("Get access token failed");
-var defaultReturnTo = () => `${window.location.pathname}${window.location.search}`;
-
-// src/AuthProvider.tsx
-import { Fragment, jsx } from "react/jsx-runtime";
-var defaultOnRedirectCallback = (appState) => {
-  window.history.replaceState({}, document.title, appState?.returnTo || window.location.pathname);
-};
-var AuthProvider = (opts) => {
-  const {
-    children,
-    skipRedirectCallback,
-    onRedirectCallback = defaultOnRedirectCallback,
-    authStore
-  } = opts;
-  const { auth0Client, initialised, setError } = authStore.getState();
-  const didInitialise = useRef(false);
-  useEffect(() => {
-    if (didInitialise.current) {
-      return;
-    }
-    didInitialise.current = true;
-    (async () => {
-      try {
-        let user;
-        if (hasAuthParams() && !skipRedirectCallback) {
-          const { appState } = await auth0Client.handleRedirectCallback();
-          user = await auth0Client.getUser();
-          initialised(user);
-          onRedirectCallback(appState, user);
-        } else {
-          await auth0Client.checkSession();
-          user = await auth0Client.getUser();
-          initialised(user);
-        }
-      } catch (error) {
-        setError(error);
-      }
-    })();
-  }, [auth0Client, initialised, onRedirectCallback, setError, skipRedirectCallback]);
-  return /* @__PURE__ */ jsx(Fragment, {
-    children
-  });
-};
-var AuthProvider_default = AuthProvider;
+var defaultReturnTo = "/";
+var snakeToCamelCase = (str) => str.replace(/([-_][a-z0-9])/gi, ($1) => $1.toUpperCase().replace("_", ""));
+function transformSnakeObjectKeysToCamel(data) {
+  return Object.fromEntries(
+    Object.entries(data).map(([key, val]) => [snakeToCamelCase(key), processVal(val)])
+  );
+}
+function processVal(val) {
+  return typeof val !== "object" || val === null ? val : Array.isArray(val) ? val.map(processVal) : transformSnakeObjectKeysToCamel(val);
+}
 
 // src/authStore.ts
-import {
-  Auth0Client
-} from "@auth0/auth0-spa-js";
-import { createStore } from "zustand";
 var createAuthStore = (options) => createStore()((set, get) => ({
   isLoading: true,
   isAuthenticated: false,
@@ -83,7 +44,7 @@ var createAuthStore = (options) => createStore()((set, get) => ({
   initialised: (user) => set((state) => ({
     ...state,
     isAuthenticated: !!user,
-    user,
+    user: user ? transformSnakeObjectKeysToCamel(user) : user,
     isLoading: false,
     error: void 0
   })),
@@ -104,10 +65,13 @@ var createAuthStore = (options) => createStore()((set, get) => ({
     } catch (error) {
       throw tokenError(error);
     } finally {
-      const user = await auth0Client.getUser();
-      set(
-        (state) => state.user?.updated_at === user?.updated_at ? state : { ...state, isAuthenticated: !!user, user }
-      );
+      const auth0User = await auth0Client.getUser();
+      if (auth0User) {
+        const user = transformSnakeObjectKeysToCamel(auth0User);
+        set(
+          (state) => state.user?.updatedAt === user.updatedAt ? state : { ...state, isAuthenticated: !!user, user }
+        );
+      }
     }
     return token;
   },
@@ -117,52 +81,44 @@ var createAuthStore = (options) => createStore()((set, get) => ({
   }
 }));
 
-// src/withAuthRequired.tsx
-import { useEffect as useEffect2 } from "react";
-import { Fragment as Fragment2, jsx as jsx2 } from "react/jsx-runtime";
-var defaultOnRedirecting = () => /* @__PURE__ */ jsx2(Fragment2, {
-  children: "Redirecting..."
-});
-var withAuthRequired = (Component, options) => function WithAuthenticationRequired(props) {
-  const {
-    useAuth,
-    loginOptions,
-    returnTo = defaultReturnTo,
-    onRedirecting = defaultOnRedirecting,
-    claimCheck = () => true
-  } = options;
-  const isAuthenticated = useAuth((state) => state.isAuthenticated);
-  const isLoading = useAuth((state) => state.isLoading);
-  const user = useAuth((state) => state.user);
-  const loginWithRedirect = useAuth((state) => state.loginWithRedirect);
-  const routeIsAuthenticated = isAuthenticated && claimCheck(user);
-  useEffect2(() => {
-    if (isLoading || routeIsAuthenticated) {
-      return;
-    }
-    const opts = {
-      ...loginOptions,
-      appState: {
-        ...loginOptions && loginOptions.appState,
-        returnTo: typeof returnTo === "function" ? returnTo() : returnTo
+// src/loaderPolicyFunctions.ts
+var authorize = async (authStore, callback) => {
+  const { user, loginWithRedirect, auth0Client, initialised } = authStore.getState();
+  try {
+    if (user)
+      return await callback({ user });
+    await auth0Client.checkSession();
+    const auth0User = await auth0Client.getUser();
+    if (!auth0User)
+      throw new Error("Unauthorized");
+    initialised(auth0User);
+    return await callback({ user: transformSnakeObjectKeysToCamel(auth0User) });
+  } catch (error) {
+    return await loginWithRedirect({
+      appState: { returnTo: defaultReturnTo },
+      onRedirect: async (url) => {
+        window.location.replace(url);
+        return new Promise((resolve) => {
+          setTimeout(resolve, 1e3);
+        });
       }
-    };
-    (async () => {
-      await loginWithRedirect(opts);
-    })();
-  }, [isLoading, routeIsAuthenticated, loginWithRedirect, loginOptions, returnTo]);
-  return routeIsAuthenticated ? /* @__PURE__ */ jsx2(Component, {
-    ...props
-  }) : onRedirecting();
+    });
+  }
 };
-var withAuthRequired_default = withAuthRequired;
+var handleRedirectCallback = async (authStore, callBack) => {
+  const { auth0Client, initialised } = authStore.getState();
+  const { appState } = await auth0Client.handleRedirectCallback();
+  const auth0User = await auth0Client.getUser();
+  initialised(auth0User);
+  return callBack({ appState });
+};
 
 // src/index.ts
 import { default as default2 } from "zustand";
 export {
-  AuthProvider_default as AuthProvider,
+  authorize,
   default2 as createAuthHook,
   createAuthStore,
-  withAuthRequired_default as withAuthRequired
+  handleRedirectCallback
 };
 //# sourceMappingURL=index.mjs.map

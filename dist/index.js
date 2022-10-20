@@ -26,15 +26,16 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/index.ts
 var src_exports = {};
 __export(src_exports, {
-  AuthProvider: () => AuthProvider_default,
+  authorize: () => authorize,
   createAuthHook: () => import_zustand2.default,
   createAuthStore: () => createAuthStore,
-  withAuthRequired: () => withAuthRequired_default
+  handleRedirectCallback: () => handleRedirectCallback
 });
 module.exports = __toCommonJS(src_exports);
 
-// src/AuthProvider.tsx
-var import_react = require("react");
+// src/authStore.ts
+var import_auth0_spa_js = require("@auth0/auth0-spa-js");
+var import_zustand = require("zustand");
 
 // src/errors.ts
 var OAuthError = class extends Error {
@@ -47,10 +48,6 @@ var OAuthError = class extends Error {
 };
 
 // src/utils.ts
-var CODE_RE = /[?&]code=[^&]+/;
-var STATE_RE = /[?&]state=[^&]+/;
-var ERROR_RE = /[?&]error=[^&]+/;
-var hasAuthParams = (searchParams = window.location.search) => (CODE_RE.test(searchParams) || ERROR_RE.test(searchParams)) && STATE_RE.test(searchParams);
 var normalizeErrorFn = (fallbackMessage) => (error) => {
   if ("error" in error) {
     return new OAuthError(error.error, error.error_description);
@@ -61,54 +58,18 @@ var normalizeErrorFn = (fallbackMessage) => (error) => {
   return new Error(fallbackMessage);
 };
 var tokenError = normalizeErrorFn("Get access token failed");
-var defaultReturnTo = () => `${window.location.pathname}${window.location.search}`;
-
-// src/AuthProvider.tsx
-var import_jsx_runtime = require("react/jsx-runtime");
-var defaultOnRedirectCallback = (appState) => {
-  window.history.replaceState({}, document.title, appState?.returnTo || window.location.pathname);
-};
-var AuthProvider = (opts) => {
-  const {
-    children,
-    skipRedirectCallback,
-    onRedirectCallback = defaultOnRedirectCallback,
-    authStore
-  } = opts;
-  const { auth0Client, initialised, setError } = authStore.getState();
-  const didInitialise = (0, import_react.useRef)(false);
-  (0, import_react.useEffect)(() => {
-    if (didInitialise.current) {
-      return;
-    }
-    didInitialise.current = true;
-    (async () => {
-      try {
-        let user;
-        if (hasAuthParams() && !skipRedirectCallback) {
-          const { appState } = await auth0Client.handleRedirectCallback();
-          user = await auth0Client.getUser();
-          initialised(user);
-          onRedirectCallback(appState, user);
-        } else {
-          await auth0Client.checkSession();
-          user = await auth0Client.getUser();
-          initialised(user);
-        }
-      } catch (error) {
-        setError(error);
-      }
-    })();
-  }, [auth0Client, initialised, onRedirectCallback, setError, skipRedirectCallback]);
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, {
-    children
-  });
-};
-var AuthProvider_default = AuthProvider;
+var defaultReturnTo = "/";
+var snakeToCamelCase = (str) => str.replace(/([-_][a-z0-9])/gi, ($1) => $1.toUpperCase().replace("_", ""));
+function transformSnakeObjectKeysToCamel(data) {
+  return Object.fromEntries(
+    Object.entries(data).map(([key, val]) => [snakeToCamelCase(key), processVal(val)])
+  );
+}
+function processVal(val) {
+  return typeof val !== "object" || val === null ? val : Array.isArray(val) ? val.map(processVal) : transformSnakeObjectKeysToCamel(val);
+}
 
 // src/authStore.ts
-var import_auth0_spa_js = require("@auth0/auth0-spa-js");
-var import_zustand = require("zustand");
 var createAuthStore = (options) => (0, import_zustand.createStore)()((set, get) => ({
   isLoading: true,
   isAuthenticated: false,
@@ -116,7 +77,7 @@ var createAuthStore = (options) => (0, import_zustand.createStore)()((set, get) 
   initialised: (user) => set((state) => ({
     ...state,
     isAuthenticated: !!user,
-    user,
+    user: user ? transformSnakeObjectKeysToCamel(user) : user,
     isLoading: false,
     error: void 0
   })),
@@ -137,10 +98,13 @@ var createAuthStore = (options) => (0, import_zustand.createStore)()((set, get) 
     } catch (error) {
       throw tokenError(error);
     } finally {
-      const user = await auth0Client.getUser();
-      set(
-        (state) => state.user?.updated_at === user?.updated_at ? state : { ...state, isAuthenticated: !!user, user }
-      );
+      const auth0User = await auth0Client.getUser();
+      if (auth0User) {
+        const user = transformSnakeObjectKeysToCamel(auth0User);
+        set(
+          (state) => state.user?.updatedAt === user.updatedAt ? state : { ...state, isAuthenticated: !!user, user }
+        );
+      }
     }
     return token;
   },
@@ -150,53 +114,45 @@ var createAuthStore = (options) => (0, import_zustand.createStore)()((set, get) 
   }
 }));
 
-// src/withAuthRequired.tsx
-var import_react2 = require("react");
-var import_jsx_runtime2 = require("react/jsx-runtime");
-var defaultOnRedirecting = () => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_jsx_runtime2.Fragment, {
-  children: "Redirecting..."
-});
-var withAuthRequired = (Component, options) => function WithAuthenticationRequired(props) {
-  const {
-    useAuth,
-    loginOptions,
-    returnTo = defaultReturnTo,
-    onRedirecting = defaultOnRedirecting,
-    claimCheck = () => true
-  } = options;
-  const isAuthenticated = useAuth((state) => state.isAuthenticated);
-  const isLoading = useAuth((state) => state.isLoading);
-  const user = useAuth((state) => state.user);
-  const loginWithRedirect = useAuth((state) => state.loginWithRedirect);
-  const routeIsAuthenticated = isAuthenticated && claimCheck(user);
-  (0, import_react2.useEffect)(() => {
-    if (isLoading || routeIsAuthenticated) {
-      return;
-    }
-    const opts = {
-      ...loginOptions,
-      appState: {
-        ...loginOptions && loginOptions.appState,
-        returnTo: typeof returnTo === "function" ? returnTo() : returnTo
+// src/loaderPolicyFunctions.ts
+var authorize = async (authStore, callback) => {
+  const { user, loginWithRedirect, auth0Client, initialised } = authStore.getState();
+  try {
+    if (user)
+      return await callback({ user });
+    await auth0Client.checkSession();
+    const auth0User = await auth0Client.getUser();
+    if (!auth0User)
+      throw new Error("Unauthorized");
+    initialised(auth0User);
+    return await callback({ user: transformSnakeObjectKeysToCamel(auth0User) });
+  } catch (error) {
+    return await loginWithRedirect({
+      appState: { returnTo: defaultReturnTo },
+      onRedirect: async (url) => {
+        window.location.replace(url);
+        return new Promise((resolve) => {
+          setTimeout(resolve, 1e3);
+        });
       }
-    };
-    (async () => {
-      await loginWithRedirect(opts);
-    })();
-  }, [isLoading, routeIsAuthenticated, loginWithRedirect, loginOptions, returnTo]);
-  return routeIsAuthenticated ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Component, {
-    ...props
-  }) : onRedirecting();
+    });
+  }
 };
-var withAuthRequired_default = withAuthRequired;
+var handleRedirectCallback = async (authStore, callBack) => {
+  const { auth0Client, initialised } = authStore.getState();
+  const { appState } = await auth0Client.handleRedirectCallback();
+  const auth0User = await auth0Client.getUser();
+  initialised(auth0User);
+  return callBack({ appState });
+};
 
 // src/index.ts
 var import_zustand2 = __toESM(require("zustand"));
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  AuthProvider,
+  authorize,
   createAuthHook,
   createAuthStore,
-  withAuthRequired
+  handleRedirectCallback
 });
 //# sourceMappingURL=index.js.map
