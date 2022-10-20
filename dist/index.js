@@ -138,12 +138,12 @@ var authorize = async (authStore, callback) => {
     });
   }
 };
-var handleRedirectCallback = async (authStore, callBack) => {
+var handleRedirectCallback = async (authStore, callback) => {
   const { auth0Client, initialised } = authStore.getState();
   const { appState } = await auth0Client.handleRedirectCallback();
   const auth0User = await auth0Client.getUser();
   initialised(auth0User);
-  return callBack({ appState });
+  return callback({ appState });
 };
 
 // src/index.ts

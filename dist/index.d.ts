@@ -164,7 +164,7 @@ declare const handleRedirectCallback: <LoaderReturn = Response>(authStore: zusta
     logout: (logoutOptions?: _auth0_auth0_spa_js.LogoutOptions | undefined) => Promise<void>;
     getAccessTokenSilently: (getTokenOptions?: _auth0_auth0_spa_js.GetTokenSilentlyOptions | undefined) => Promise<string>;
     getIdTokenClaims: () => Promise<_auth0_auth0_spa_js.IdToken | undefined>;
-}>, callBack: (input: {
+}>, callback: (input: {
     appState?: AppState;
 }) => Promise<LoaderReturn>) => Promise<LoaderReturn>;
 

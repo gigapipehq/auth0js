@@ -65,7 +65,7 @@ export const authorize = async <LoaderReturn = Response>(
  */
 export const handleRedirectCallback = async <LoaderReturn = Response>(
   authStore: AuthStore,
-  callBack: (input: { appState?: AppState }) => Promise<LoaderReturn>,
+  callback: (input: { appState?: AppState }) => Promise<LoaderReturn>,
 ) => {
   const { auth0Client, initialised } = authStore.getState()
 
@@ -73,5 +73,5 @@ export const handleRedirectCallback = async <LoaderReturn = Response>(
   const auth0User = await auth0Client.getUser<Auth0User>()
   initialised(auth0User)
 
-  return callBack({ appState })
+  return callback({ appState })
 }
