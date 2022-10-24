@@ -115,7 +115,7 @@ var createAuthStore = (options) => (0, import_zustand.createStore)()((set, get) 
 }));
 
 // src/loaderPolicyFunctions.ts
-var authorize = async (authStore, callback) => {
+var authorize = async (authStore, callback, returnTo = defaultReturnTo) => {
   const { user, loginWithRedirect, auth0Client, initialised } = authStore.getState();
   try {
     if (user)
@@ -128,7 +128,7 @@ var authorize = async (authStore, callback) => {
     return await callback({ user: transformSnakeObjectKeysToCamel(auth0User) });
   } catch (error) {
     return await loginWithRedirect({
-      appState: { returnTo: defaultReturnTo },
+      appState: { returnTo },
       onRedirect: async (url) => {
         window.location.replace(url);
         return new Promise((resolve) => {

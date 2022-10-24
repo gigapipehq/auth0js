@@ -65,13 +65,18 @@ declare const createAuthStore: (options: Auth0ClientOptions) => StoreApi<AuthSta
  * This is a policy function used to authorize a request in a loader function from react-router
  * @param authStore
  * @param callback
+ * @param returnTo
  *
  * @example
  * ```js
  *  async function loader({ request }) {
- *      return authorize(authStore, async ({ user }) => {
+ *      return authorize(
+ *        authStore,
+ *        async ({ user }) => {
  *          // here we can get the data for this route and return it.
- *      })
+ *        },
+ *        '/welcome'
+ *    )
  *  }
  * ```
  */
@@ -111,7 +116,7 @@ declare const authorize: <LoaderReturn = Response>(authStore: zustand.StoreApi<{
     getIdTokenClaims: () => Promise<_auth0_auth0_spa_js.IdToken | undefined>;
 }>, callback: (input: {
     user: User;
-}) => Promise<LoaderReturn>) => Promise<void | LoaderReturn>;
+}) => Promise<LoaderReturn>, returnTo?: string) => Promise<void | LoaderReturn>;
 /**
  * This is a policy function used to handle the redirection from Auth0
  * @param authStore
