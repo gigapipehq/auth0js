@@ -6,19 +6,25 @@ import { defaultReturnTo, transformSnakeObjectKeysToCamel } from './utils'
  * This is a policy function used to authorize a request in a loader function from react-router
  * @param authStore
  * @param callback
+ * @param returnTo
  *
  * @example
  * ```js
  *  async function loader({ request }) {
- *      return authorize(authStore, async ({ user }) => {
+ *      return authorize(
+ *        authStore,
+ *        async ({ user }) => {
  *          // here we can get the data for this route and return it.
- *      })
+ *        },
+ *        '/welcome'
+ *    )
  *  }
  * ```
  */
 export const authorize = async <LoaderReturn = Response>(
   authStore: AuthStore,
   callback: (input: { user: User }) => Promise<LoaderReturn>,
+  returnTo = defaultReturnTo,
 ) => {
   const { user, loginWithRedirect, auth0Client, initialised } = authStore.getState()
 
@@ -34,7 +40,7 @@ export const authorize = async <LoaderReturn = Response>(
     return await callback({ user: transformSnakeObjectKeysToCamel(auth0User) })
   } catch (error) {
     return await loginWithRedirect({
-      appState: { returnTo: defaultReturnTo },
+      appState: { returnTo },
       onRedirect: async url => {
         window.location.replace(url)
         return new Promise(resolve => {
