@@ -56,4 +56,5 @@ p {
   gap: 12px;
   margin: 24px 0px;
   align-items: center;
+  justify-content: center;
 }
