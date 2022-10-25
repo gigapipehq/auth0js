@@ -5,7 +5,7 @@ import { authStore, useAuth } from './auth'
 const simulateAPIRequest = async () => {
   const { getAccessTokenSilently } = authStore.getState()
   const accessToken = await getAccessTokenSilently()
-  console.log('Here it is your access token: ', accessToken)
+  console.log('Here is your access token: ', accessToken)
 }
 
 export function Nav() {
@@ -81,6 +81,22 @@ export function Nav() {
                 </button>
               </div>
             )}
+            <div className="column">
+              <p>Signup</p>
+              <button
+                className="btn btn-outline-success"
+                id="login"
+                onClick={() =>
+                  loginWithRedirect({
+                    authorizationParams: {
+                      screen_hint: 'signup',
+                    },
+                  })
+                }
+              >
+                signup
+              </button>
+            </div>
           </>
         )}
       </div>
