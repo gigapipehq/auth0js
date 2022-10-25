@@ -27,19 +27,13 @@ export const authorize = async <LoaderReturn = Response>(
   returnTo = defaultReturnTo,
 ) => {
   const { user, loginWithRedirect, auth0Client, initialised } = authStore.getState()
+  if (user) return callback({ user })
 
-  try {
-    if (user) return await callback({ user })
+  await auth0Client.checkSession()
+  const auth0User = await auth0Client.getUser<Auth0User>()
 
-    await auth0Client.checkSession()
-    const auth0User = await auth0Client.getUser<Auth0User>()
-
-    if (!auth0User) throw new Error('Unauthorized')
-    initialised(auth0User)
-
-    return await callback({ user: transformSnakeObjectKeysToCamel(auth0User) })
-  } catch (error) {
-    return await loginWithRedirect({
+  if (!auth0User) {
+    return loginWithRedirect({
       appState: { returnTo },
       onRedirect: async url => {
         window.location.replace(url)
@@ -49,6 +43,9 @@ export const authorize = async <LoaderReturn = Response>(
       },
     })
   }
+  initialised(auth0User)
+
+  return callback({ user: transformSnakeObjectKeysToCamel(auth0User) })
 }
 
 /**
