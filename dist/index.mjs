@@ -88,17 +88,12 @@ var createAuthStore = (options) => createStore()((set, get) => ({
 // src/loaderPolicyFunctions.ts
 var authorize = async (authStore, callback, returnTo = defaultReturnTo) => {
   const { user, loginWithRedirect, auth0Client, initialised } = authStore.getState();
-  try {
-    if (user)
-      return await callback({ user });
-    await auth0Client.checkSession();
-    const auth0User = await auth0Client.getUser();
-    if (!auth0User)
-      throw new Error("Unauthorized");
-    initialised(auth0User);
-    return await callback({ user: transformSnakeObjectKeysToCamel(auth0User) });
-  } catch (error) {
-    return await loginWithRedirect({
+  if (user)
+    return callback({ user });
+  await auth0Client.checkSession();
+  const auth0User = await auth0Client.getUser();
+  if (!auth0User) {
+    return loginWithRedirect({
       appState: { returnTo },
       onRedirect: async (url) => {
         window.location.replace(url);
@@ -108,6 +103,8 @@ var authorize = async (authStore, callback, returnTo = defaultReturnTo) => {
       }
     });
   }
+  initialised(auth0User);
+  return callback({ user: transformSnakeObjectKeysToCamel(auth0User) });
 };
 var handleRedirectCallback = async (authStore, callback) => {
   const { auth0Client, initialised } = authStore.getState();
