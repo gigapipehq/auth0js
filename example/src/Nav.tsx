@@ -70,7 +70,7 @@ export function Nav() {
                 <p>Define VITE_AUTH0_ORG_ID in your .env.local file</p>
                 <button
                   className="btn btn-outline-success"
-                  id="login"
+                  id="login-org"
                   onClick={() =>
                     loginWithRedirect({
                       authorizationParams: { organization: import.meta.env.VITE_AUTH0_ORG_ID },
@@ -85,7 +85,7 @@ export function Nav() {
               <p>Signup</p>
               <button
                 className="btn btn-outline-success"
-                id="login"
+                id="signup"
                 onClick={() =>
                   loginWithRedirect({
                     authorizationParams: {
