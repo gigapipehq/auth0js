@@ -27,17 +27,72 @@ declare type CamelCasedProperties<INPUT> = INPUT extends Function ? INPUT : INPU
 declare type User = CamelCasedProperties<User$1>;
 
 declare type AuthState = {
+    /**
+     * Auth0 SDK for SPAs
+     */
     auth0Client: Auth0Client;
     isLoading: boolean;
+    /**
+     * Flag to indicate if the user is authenticated
+     */
     isAuthenticated: boolean;
+    /**
+     * Any error saved in the store while interacting with Auth0
+     */
     error?: Error;
+    /**
+     * The user object
+     */
     user?: User;
     initialised: (user?: User$1) => void;
     setError: (error: Error) => void;
+    /**
+     * ```js
+     * await loginWithRedirect(options);
+     * ```
+     *
+     * Performs a redirect to the `/authorize` route in Auth0 using the parameters provided as arguments.
+     *
+     * @param options
+     */
     loginWithRedirect: (loginOptions?: RedirectLoginOptions) => Promise<void>;
+    /**
+     * ```js
+     * await logout(options);
+     * ```
+     *
+     * Clears the application session and performs a redirect to the login route defind in Auth0
+     *
+     * */
     logout: (logoutOptions?: LogoutOptions) => Promise<void>;
+    /**
+     * ```js
+     * const accessToken = await getAccessTokenSilently(options);
+     * ```
+     *
+     * Fetches a new access token and return it
+     * It also uses it to get an updated user and save it in the store
+     */
     getAccessTokenSilently: (getTokenOptions?: GetTokenSilentlyOptions) => Promise<string>;
+    /**
+     * ```js
+     * const claims = await getIdTokenClaims();
+     * ```
+     *
+     * Returns all claims from the id_token if available.
+     */
     getIdTokenClaims: () => Promise<IdToken | undefined>;
+    /**
+     *    * ```js
+     * const user =  await updateUser({ givenName: 'Alfredo });
+     * const user =  await updateUser({ givenName: 'Alfredo }, { fetchNewToken: true });
+     * ```
+     *
+     * A function to update the user in the store or force a fetching of the information from Auth0
+     */
+    updateUser: (user: User, options?: {
+        fetchNewToken?: boolean;
+    }) => Promise<User | undefined>;
 };
 /**
  *  Function factory to create the Zustand store that contains all the state and the different auth methods.
@@ -114,6 +169,53 @@ declare const authorize: <LoaderReturn = Response>(authStore: zustand.StoreApi<{
     logout: (logoutOptions?: _auth0_auth0_spa_js.LogoutOptions | undefined) => Promise<void>;
     getAccessTokenSilently: (getTokenOptions?: _auth0_auth0_spa_js.GetTokenSilentlyOptions | undefined) => Promise<string>;
     getIdTokenClaims: () => Promise<_auth0_auth0_spa_js.IdToken | undefined>;
+    updateUser: (user: {
+        [x: string]: any;
+        name?: string | undefined;
+        givenName?: string | undefined;
+        familyName?: string | undefined;
+        middleName?: string | undefined;
+        nickname?: string | undefined;
+        preferredUsername?: string | undefined;
+        profile?: string | undefined;
+        picture?: string | undefined;
+        website?: string | undefined;
+        email?: string | undefined;
+        emailVerified?: boolean | undefined;
+        gender?: string | undefined;
+        birthdate?: string | undefined;
+        zoneinfo?: string | undefined;
+        locale?: string | undefined;
+        phoneNumber?: string | undefined;
+        phoneNumberVerified?: boolean | undefined;
+        address?: string | undefined;
+        updatedAt?: string | undefined;
+        sub?: string | undefined;
+    }, options?: {
+        fetchNewToken?: boolean | undefined;
+    } | undefined) => Promise<{
+        [x: string]: any;
+        name?: string | undefined;
+        givenName?: string | undefined;
+        familyName?: string | undefined;
+        middleName?: string | undefined;
+        nickname?: string | undefined;
+        preferredUsername?: string | undefined;
+        profile?: string | undefined;
+        picture?: string | undefined;
+        website?: string | undefined;
+        email?: string | undefined;
+        emailVerified?: boolean | undefined;
+        gender?: string | undefined;
+        birthdate?: string | undefined;
+        zoneinfo?: string | undefined;
+        locale?: string | undefined;
+        phoneNumber?: string | undefined;
+        phoneNumberVerified?: boolean | undefined;
+        address?: string | undefined;
+        updatedAt?: string | undefined;
+        sub?: string | undefined;
+    } | undefined>;
 }>, callback: (input: {
     user: User;
 }) => Promise<LoaderReturn>, returnTo?: string) => Promise<void | LoaderReturn>;
@@ -169,6 +271,53 @@ declare const handleRedirectCallback: <LoaderReturn = Response>(authStore: zusta
     logout: (logoutOptions?: _auth0_auth0_spa_js.LogoutOptions | undefined) => Promise<void>;
     getAccessTokenSilently: (getTokenOptions?: _auth0_auth0_spa_js.GetTokenSilentlyOptions | undefined) => Promise<string>;
     getIdTokenClaims: () => Promise<_auth0_auth0_spa_js.IdToken | undefined>;
+    updateUser: (user: {
+        [x: string]: any;
+        name?: string | undefined;
+        givenName?: string | undefined;
+        familyName?: string | undefined;
+        middleName?: string | undefined;
+        nickname?: string | undefined;
+        preferredUsername?: string | undefined;
+        profile?: string | undefined;
+        picture?: string | undefined;
+        website?: string | undefined;
+        email?: string | undefined;
+        emailVerified?: boolean | undefined;
+        gender?: string | undefined;
+        birthdate?: string | undefined;
+        zoneinfo?: string | undefined;
+        locale?: string | undefined;
+        phoneNumber?: string | undefined;
+        phoneNumberVerified?: boolean | undefined;
+        address?: string | undefined;
+        updatedAt?: string | undefined;
+        sub?: string | undefined;
+    }, options?: {
+        fetchNewToken?: boolean | undefined;
+    } | undefined) => Promise<{
+        [x: string]: any;
+        name?: string | undefined;
+        givenName?: string | undefined;
+        familyName?: string | undefined;
+        middleName?: string | undefined;
+        nickname?: string | undefined;
+        preferredUsername?: string | undefined;
+        profile?: string | undefined;
+        picture?: string | undefined;
+        website?: string | undefined;
+        email?: string | undefined;
+        emailVerified?: boolean | undefined;
+        gender?: string | undefined;
+        birthdate?: string | undefined;
+        zoneinfo?: string | undefined;
+        locale?: string | undefined;
+        phoneNumber?: string | undefined;
+        phoneNumberVerified?: boolean | undefined;
+        address?: string | undefined;
+        updatedAt?: string | undefined;
+        sub?: string | undefined;
+    } | undefined>;
 }>, callback: (input: {
     appState?: AppState;
 }) => Promise<LoaderReturn>) => Promise<LoaderReturn>;

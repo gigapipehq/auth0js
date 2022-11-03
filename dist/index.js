@@ -115,6 +115,17 @@ var createAuthStore = (options) => (0, import_zustand.createStore)()((set, get) 
   getIdTokenClaims: () => {
     const { auth0Client } = get();
     return auth0Client.getIdTokenClaims();
+  },
+  updateUser: async (user, ops = { fetchNewToken: false }) => {
+    if (ops.fetchNewToken) {
+      const { getAccessTokenSilently } = get();
+      await getAccessTokenSilently({ cacheMode: "off" });
+      return get().user;
+    }
+    const currentUser = get().user;
+    const newUser = { ...currentUser, ...user };
+    set((state) => ({ ...state, user: newUser }));
+    return newUser;
   }
 }));
 
