@@ -12,17 +12,70 @@ import type { Auth0User, User } from './types'
 import { defaultLogoutReturnTo, tokenError, transformSnakeObjectKeysToCamel } from './utils'
 
 type AuthState = {
+  /**
+   * Auth0 SDK for SPAs
+   */
   auth0Client: Auth0Client
   isLoading: boolean
+  /**
+   * Flag to indicate if the user is authenticated
+   */
   isAuthenticated: boolean
+  /**
+   * Any error saved in the store while interacting with Auth0
+   */
   error?: Error
+  /**
+   * The user object
+   */
   user?: User
   initialised: (user?: Auth0User) => void
   setError: (error: Error) => void
+  /**
+   * ```js
+   * await loginWithRedirect(options);
+   * ```
+   *
+   * Performs a redirect to the `/authorize` route in Auth0 using the parameters provided as arguments.
+   *
+   * @param options
+   */
   loginWithRedirect: (loginOptions?: RedirectLoginOptions) => Promise<void>
+  /**
+   * ```js
+   * await logout(options);
+   * ```
+   *
+   * Clears the application session and performs a redirect to the login route defind in Auth0
+   *
+   * */
   logout: (logoutOptions?: LogoutOptions) => Promise<void>
+  /**
+   * ```js
+   * const accessToken = await getAccessTokenSilently(options);
+   * ```
+   *
+   * Fetches a new access token and return it
+   * It also uses it to get an updated user and save it in the store
+   */
   getAccessTokenSilently: (getTokenOptions?: GetTokenSilentlyOptions) => Promise<string>
+  /**
+   * ```js
+   * const claims = await getIdTokenClaims();
+   * ```
+   *
+   * Returns all claims from the id_token if available.
+   */
   getIdTokenClaims: () => Promise<IdToken | undefined>
+  /**
+   *    * ```js
+   * const user =  await updateUser({ givenName: 'Alfredo });
+   * const user =  await updateUser({ givenName: 'Alfredo }, { fetchNewToken: true });
+   * ```
+   *
+   * A function to update the user in the store or force a fetching of the information from Auth0
+   */
+  updateUser: (user: User, options?: { fetchNewToken?: boolean }) => Promise<User | undefined>
 }
 
 /**
@@ -94,6 +147,17 @@ export const createAuthStore = (options: Auth0ClientOptions) =>
     getIdTokenClaims: () => {
       const { auth0Client } = get()
       return auth0Client.getIdTokenClaims()
+    },
+    updateUser: async (user, ops = { fetchNewToken: false }) => {
+      if (ops.fetchNewToken) {
+        const { getAccessTokenSilently } = get()
+        await getAccessTokenSilently({ cacheMode: 'off' })
+        return get().user
+      }
+      const currentUser = get().user
+      const newUser = { ...currentUser, ...user }
+      set(state => ({ ...state, user: newUser }))
+      return newUser
     },
   }))
 
