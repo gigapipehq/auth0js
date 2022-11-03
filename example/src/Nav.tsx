@@ -1,4 +1,5 @@
 import { useLocation, Link } from 'react-router-dom'
+import { faker } from '@faker-js/faker'
 
 import { authStore, useAuth } from './auth'
 
@@ -13,7 +14,7 @@ export function Nav() {
   const user = useAuth(state => state.user)
   const logout = useAuth(state => state.logout)
   const loginWithRedirect = useAuth(state => state.loginWithRedirect)
-
+  const updateUser = useAuth(state => state.updateUser)
   const { pathname } = useLocation()
 
   return (
@@ -52,11 +53,36 @@ export function Nav() {
             >
               get access token
             </button>
+            <div className="column">
+              <button
+                className="btn btn-outline-secondary"
+                id="update-user"
+                onClick={async () => {
+                  const givenName = faker.name.firstName()
+                  await updateUser({ givenName, updatedAt: new Date(Date.now()).toISOString() })
+                }}
+              >
+                update user
+              </button>
+              <p>Update the user object in the store with some random information</p>
+            </div>
+            <div className="column">
+              <button
+                className="btn btn-outline-secondary"
+                id="update-user"
+                onClick={async () => {
+                  const givenName = faker.name.firstName()
+                  await updateUser({ givenName }, { fetchNewToken: true })
+                }}
+              >
+                force update user
+              </button>
+              <p>Update the user object in the store by fetching new tokens from Auth0</p>
+            </div>
           </>
         ) : (
           <>
             <div className="column">
-              <p>Login as an individual</p>
               <button
                 className="btn btn-outline-success"
                 id="login"
@@ -64,10 +90,10 @@ export function Nav() {
               >
                 login
               </button>
+              <p>Login as an individual</p>
             </div>
             {import.meta.env.VITE_AUTH0_ORG_ID && (
               <div className="column">
-                <p>Define VITE_AUTH0_ORG_ID in your .env.local file</p>
                 <button
                   className="btn btn-outline-success"
                   id="login-org"
@@ -79,10 +105,10 @@ export function Nav() {
                 >
                   login into organization
                 </button>
+                <p>Define VITE_AUTH0_ORG_ID in your .env.local file</p>
               </div>
             )}
             <div className="column">
-              <p>Signup</p>
               <button
                 className="btn btn-outline-success"
                 id="signup"
@@ -96,6 +122,7 @@ export function Nav() {
               >
                 signup
               </button>
+              <p>Signup</p>
             </div>
           </>
         )}

@@ -48,6 +48,7 @@ p {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-width: 320px;
 }
 
 .actions {
@@ -55,6 +56,6 @@ p {
   flex-direction: row;
   gap: 12px;
   margin: 24px 0px;
-  align-items: center;
+  align-items: baseline;
   justify-content: center;
 }
