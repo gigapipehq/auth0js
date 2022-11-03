@@ -42,12 +42,12 @@
   },
   "homepage": "https://github.com/gigapipehq/auth0js#readme",
   "devDependencies": {
-    "@commitlint/cli": "^17.1.2",
-    "@commitlint/config-conventional": "^17.1.0",
-    "@types/react": "^18.0.21",
-    "@typescript-eslint/eslint-plugin": "^5.40.1",
-    "@typescript-eslint/parser": "^5.40.1",
-    "eslint": "^8.25.0",
+    "@commitlint/cli": "^17.2.0",
+    "@commitlint/config-conventional": "^17.2.0",
+    "@types/react": "^18.0.24",
+    "@typescript-eslint/eslint-plugin": "^5.42.0",
+    "@typescript-eslint/parser": "^5.42.0",
+    "eslint": "^8.26.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-config-prettier": "^8.5.0",
@@ -68,7 +68,7 @@
     "react-dom": "^16.11.0 || ^17 || ^18"
   },
   "dependencies": {
-    "@auth0/auth0-spa-js": "2.0.0-beta.1",
-    "zustand": "4.1.2"
+    "@auth0/auth0-spa-js": "2.0.0",
+    "zustand": "4.1.4"
   }
 }
