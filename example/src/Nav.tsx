@@ -1,20 +1,18 @@
 import { useLocation, Link } from 'react-router-dom'
 import { faker } from '@faker-js/faker'
 
-import { authStore, useAuth } from './auth'
+import { authStore, useAuthActions, useAuthenticated, useUser } from './auth'
 
 const simulateAPIRequest = async () => {
-  const { getAccessTokenSilently } = authStore.getState()
+  const { getAccessTokenSilently } = authStore.getState().actions
   const accessToken = await getAccessTokenSilently()
   console.log('Here is your access token: ', accessToken)
 }
 
 export function Nav() {
-  const isAuthenticated = useAuth(state => state.isAuthenticated)
-  const user = useAuth(state => state.user)
-  const logout = useAuth(state => state.logout)
-  const loginWithRedirect = useAuth(state => state.loginWithRedirect)
-  const updateUser = useAuth(state => state.updateUser)
+  const isAuthenticated = useAuthenticated()
+  const user = useUser()
+  const { logout, loginWithRedirect, updateUser } = useAuthActions()
   const { pathname } = useLocation()
 
   return (

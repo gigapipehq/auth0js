@@ -3,7 +3,7 @@ import { LoaderFunctionArgs, redirect } from 'react-router-dom'
 import { authStore } from '../auth'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { loginWithRedirect } = authStore.getState()
+  const { loginWithRedirect } = authStore.getState().actions
 
   const url = new URL(request.url)
   const invitation = url.searchParams.get('invitation')
