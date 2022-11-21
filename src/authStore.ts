@@ -29,53 +29,62 @@ type AuthState = {
    * The user object
    */
   user?: User
-  initialised: (user?: Auth0User) => void
-  setError: (error: Error) => void
   /**
-   * ```js
-   * await loginWithRedirect(options);
-   * ```
-   *
-   * Performs a redirect to the `/authorize` route in Auth0 using the parameters provided as arguments.
-   *
-   * @param options
+   * Internal action DO NOT USE
    */
-  loginWithRedirect: (loginOptions?: RedirectLoginOptions) => Promise<void>
+  _actions: {
+    initialised: (user?: Auth0User) => void
+  }
   /**
-   * ```js
-   * await logout(options);
-   * ```
-   *
-   * Clears the application session and performs a redirect to the login route defind in Auth0
-   *
-   * */
-  logout: (logoutOptions?: LogoutOptions) => Promise<void>
-  /**
-   * ```js
-   * const accessToken = await getAccessTokenSilently(options);
-   * ```
-   *
-   * Fetches a new access token and return it
-   * It also uses it to get an updated user and save it in the store
+   * All available actions to interact with Auth0
    */
-  getAccessTokenSilently: (getTokenOptions?: GetTokenSilentlyOptions) => Promise<string>
-  /**
-   * ```js
-   * const claims = await getIdTokenClaims();
-   * ```
-   *
-   * Returns all claims from the id_token if available.
-   */
-  getIdTokenClaims: () => Promise<IdToken | undefined>
-  /**
-   *    * ```js
-   * const user =  await updateUser({ givenName: 'Alfredo });
-   * const user =  await updateUser({ givenName: 'Alfredo }, { fetchNewToken: true });
-   * ```
-   *
-   * A function to update the user in the store or force a fetching of the information from Auth0
-   */
-  updateUser: (user: User, options?: { fetchNewToken?: boolean }) => Promise<User | undefined>
+  actions: {
+    /**
+     * ```js
+     * await loginWithRedirect(options);
+     * ```
+     *
+     * Performs a redirect to the `/authorize` route in Auth0 using the parameters provided as arguments.
+     *
+     * @param options
+     */
+    loginWithRedirect: (loginOptions?: RedirectLoginOptions) => Promise<void>
+    /**
+     * ```js
+     * await logout(options);
+     * ```
+     *
+     * Clears the application session and performs a redirect to the login route defind in Auth0
+     *
+     * */
+    logout: (logoutOptions?: LogoutOptions) => Promise<void>
+    /**
+     * ```js
+     * const accessToken = await getAccessTokenSilently(options);
+     * ```
+     *
+     * Fetches a new access token and return it
+     * It also uses it to get an updated user and save it in the store
+     */
+    getAccessTokenSilently: (getTokenOptions?: GetTokenSilentlyOptions) => Promise<string>
+    /**
+     * ```js
+     * const claims = await getIdTokenClaims();
+     * ```
+     *
+     * Returns all claims from the id_token if available.
+     */
+    getIdTokenClaims: () => Promise<IdToken | undefined>
+    /**
+     *    * ```js
+     * const user =  await updateUser({ givenName: 'Alfredo });
+     * const user =  await updateUser({ givenName: 'Alfredo }, { fetchNewToken: true });
+     * ```
+     *
+     * A function to update the user in the store or force a fetching of the information from Auth0
+     */
+    updateUser: (user: User, options?: { fetchNewToken?: boolean }) => Promise<User | undefined>
+  }
 }
 
 /**
@@ -93,71 +102,76 @@ type AuthState = {
  * }
  * ```
  *
- * Then you can use the `createAuthHook` function to create a custom hook for easy access inside React components
+ * Then you can use the `createAuthHook` function to create Zustand's custom hook.
  * ```js
  * const useAuth = createAuthHook(authStore)
  * ```
+ * Instead of using this hook create atomic pieces of the state (see example)
+ *
  */
 export const createAuthStore = (options: Auth0ClientOptions) =>
   createStore<AuthState>()((set, get) => ({
     isLoading: true,
     isAuthenticated: false,
     auth0Client: new Auth0Client(options),
-    initialised: user =>
-      set(state => ({
-        ...state,
-        isAuthenticated: !!user,
-        user: user ? transformSnakeObjectKeysToCamel(user) : user,
-        isLoading: false,
-        error: undefined,
-      })),
-    setError: error => set(state => ({ ...state, isLoading: false, error })),
-    loginWithRedirect: loginOptions => {
-      const { auth0Client } = get()
-      return auth0Client.loginWithRedirect(loginOptions)
+    _actions: {
+      initialised: user =>
+        set(state => ({
+          ...state,
+          isAuthenticated: !!user,
+          user: user ? transformSnakeObjectKeysToCamel(user) : user,
+          isLoading: false,
+          error: undefined,
+        })),
     },
-    logout: logoutOptions => {
-      const { auth0Client } = get()
-      return auth0Client.logout({
-        ...logoutOptions,
-        logoutParams: { returnTo: defaultLogoutReturnTo, ...logoutOptions?.logoutParams },
-      })
-    },
-    getAccessTokenSilently: async getTokenOptions => {
-      const { auth0Client } = get()
-      let token
+    actions: {
+      loginWithRedirect: loginOptions => {
+        const { auth0Client } = get()
+        return auth0Client.loginWithRedirect(loginOptions)
+      },
+      logout: logoutOptions => {
+        const { auth0Client } = get()
+        return auth0Client.logout({
+          ...logoutOptions,
+          logoutParams: { returnTo: defaultLogoutReturnTo, ...logoutOptions?.logoutParams },
+        })
+      },
+      getAccessTokenSilently: async getTokenOptions => {
+        const { auth0Client } = get()
+        let token
 
-      try {
-        token = await auth0Client.getTokenSilently(getTokenOptions)
-      } catch (error: any) {
-        throw tokenError(error)
-      } finally {
-        const auth0User = await auth0Client.getUser<Auth0User>()
-        if (auth0User) {
-          const user = transformSnakeObjectKeysToCamel(auth0User)
-          set(state =>
-            state.user?.updatedAt === user.updatedAt
-              ? state
-              : { ...state, isAuthenticated: !!user, user },
-          )
+        try {
+          token = await auth0Client.getTokenSilently(getTokenOptions)
+        } catch (error: any) {
+          throw tokenError(error)
+        } finally {
+          const auth0User = await auth0Client.getUser<Auth0User>()
+          if (auth0User) {
+            const user = transformSnakeObjectKeysToCamel(auth0User)
+            set(state =>
+              state.user?.updatedAt === user.updatedAt
+                ? state
+                : { ...state, isAuthenticated: !!user, user },
+            )
+          }
         }
-      }
-      return token
-    },
-    getIdTokenClaims: () => {
-      const { auth0Client } = get()
-      return auth0Client.getIdTokenClaims()
-    },
-    updateUser: async (user, ops = { fetchNewToken: false }) => {
-      if (ops.fetchNewToken) {
-        const { getAccessTokenSilently } = get()
-        await getAccessTokenSilently({ cacheMode: 'off' })
-        return get().user
-      }
-      const currentUser = get().user
-      const newUser = { ...currentUser, ...user }
-      set(state => ({ ...state, user: newUser }))
-      return newUser
+        return token
+      },
+      getIdTokenClaims: () => {
+        const { auth0Client } = get()
+        return auth0Client.getIdTokenClaims()
+      },
+      updateUser: async (user, ops = { fetchNewToken: false }) => {
+        if (ops.fetchNewToken) {
+          const { getAccessTokenSilently } = get().actions
+          await getAccessTokenSilently({ cacheMode: 'off' })
+          return get().user
+        }
+        const currentUser = get().user
+        const newUser = { ...currentUser, ...user }
+        set(state => ({ ...state, user: newUser }))
+        return newUser
+      },
     },
   }))
 

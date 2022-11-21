@@ -26,7 +26,12 @@ export const authorize = async <LoaderReturn = Response>(
   callback: (input: { user: User }) => Promise<LoaderReturn>,
   returnTo = defaultReturnTo,
 ) => {
-  const { user, loginWithRedirect, auth0Client, initialised } = authStore.getState()
+  const {
+    user,
+    auth0Client,
+    actions: { loginWithRedirect },
+    _actions: { initialised },
+  } = authStore.getState()
   if (user) return callback({ user })
 
   await auth0Client.checkSession()
@@ -70,7 +75,10 @@ export const handleRedirectCallback = async <LoaderReturn = Response>(
   authStore: AuthStore,
   callback: (input: { appState?: AppState }) => Promise<LoaderReturn>,
 ) => {
-  const { auth0Client, initialised } = authStore.getState()
+  const {
+    auth0Client,
+    _actions: { initialised },
+  } = authStore.getState()
 
   const { appState } = await auth0Client.handleRedirectCallback<AppState>()
   const auth0User = await auth0Client.getUser<Auth0User>()

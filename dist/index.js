@@ -75,63 +75,71 @@ var createAuthStore = (options) => (0, import_zustand.createStore)()((set, get) 
   isLoading: true,
   isAuthenticated: false,
   auth0Client: new import_auth0_spa_js.Auth0Client(options),
-  initialised: (user) => set((state) => ({
-    ...state,
-    isAuthenticated: !!user,
-    user: user ? transformSnakeObjectKeysToCamel(user) : user,
-    isLoading: false,
-    error: void 0
-  })),
-  setError: (error) => set((state) => ({ ...state, isLoading: false, error })),
-  loginWithRedirect: (loginOptions) => {
-    const { auth0Client } = get();
-    return auth0Client.loginWithRedirect(loginOptions);
+  _actions: {
+    initialised: (user) => set((state) => ({
+      ...state,
+      isAuthenticated: !!user,
+      user: user ? transformSnakeObjectKeysToCamel(user) : user,
+      isLoading: false,
+      error: void 0
+    }))
   },
-  logout: (logoutOptions) => {
-    const { auth0Client } = get();
-    return auth0Client.logout({
-      ...logoutOptions,
-      logoutParams: { returnTo: defaultLogoutReturnTo, ...logoutOptions?.logoutParams }
-    });
-  },
-  getAccessTokenSilently: async (getTokenOptions) => {
-    const { auth0Client } = get();
-    let token;
-    try {
-      token = await auth0Client.getTokenSilently(getTokenOptions);
-    } catch (error) {
-      throw tokenError(error);
-    } finally {
-      const auth0User = await auth0Client.getUser();
-      if (auth0User) {
-        const user = transformSnakeObjectKeysToCamel(auth0User);
-        set(
-          (state) => state.user?.updatedAt === user.updatedAt ? state : { ...state, isAuthenticated: !!user, user }
-        );
+  actions: {
+    loginWithRedirect: (loginOptions) => {
+      const { auth0Client } = get();
+      return auth0Client.loginWithRedirect(loginOptions);
+    },
+    logout: (logoutOptions) => {
+      const { auth0Client } = get();
+      return auth0Client.logout({
+        ...logoutOptions,
+        logoutParams: { returnTo: defaultLogoutReturnTo, ...logoutOptions?.logoutParams }
+      });
+    },
+    getAccessTokenSilently: async (getTokenOptions) => {
+      const { auth0Client } = get();
+      let token;
+      try {
+        token = await auth0Client.getTokenSilently(getTokenOptions);
+      } catch (error) {
+        throw tokenError(error);
+      } finally {
+        const auth0User = await auth0Client.getUser();
+        if (auth0User) {
+          const user = transformSnakeObjectKeysToCamel(auth0User);
+          set(
+            (state) => state.user?.updatedAt === user.updatedAt ? state : { ...state, isAuthenticated: !!user, user }
+          );
+        }
       }
+      return token;
+    },
+    getIdTokenClaims: () => {
+      const { auth0Client } = get();
+      return auth0Client.getIdTokenClaims();
+    },
+    updateUser: async (user, ops = { fetchNewToken: false }) => {
+      if (ops.fetchNewToken) {
+        const { getAccessTokenSilently } = get().actions;
+        await getAccessTokenSilently({ cacheMode: "off" });
+        return get().user;
+      }
+      const currentUser = get().user;
+      const newUser = { ...currentUser, ...user };
+      set((state) => ({ ...state, user: newUser }));
+      return newUser;
     }
-    return token;
-  },
-  getIdTokenClaims: () => {
-    const { auth0Client } = get();
-    return auth0Client.getIdTokenClaims();
-  },
-  updateUser: async (user, ops = { fetchNewToken: false }) => {
-    if (ops.fetchNewToken) {
-      const { getAccessTokenSilently } = get();
-      await getAccessTokenSilently({ cacheMode: "off" });
-      return get().user;
-    }
-    const currentUser = get().user;
-    const newUser = { ...currentUser, ...user };
-    set((state) => ({ ...state, user: newUser }));
-    return newUser;
   }
 }));
 
 // src/loaderPolicyFunctions.ts
 var authorize = async (authStore, callback, returnTo = defaultReturnTo) => {
-  const { user, loginWithRedirect, auth0Client, initialised } = authStore.getState();
+  const {
+    user,
+    auth0Client,
+    actions: { loginWithRedirect },
+    _actions: { initialised }
+  } = authStore.getState();
   if (user)
     return callback({ user });
   await auth0Client.checkSession();
@@ -151,7 +159,10 @@ var authorize = async (authStore, callback, returnTo = defaultReturnTo) => {
   return callback({ user: transformSnakeObjectKeysToCamel(auth0User) });
 };
 var handleRedirectCallback = async (authStore, callback) => {
-  const { auth0Client, initialised } = authStore.getState();
+  const {
+    auth0Client,
+    _actions: { initialised }
+  } = authStore.getState();
   const { appState } = await auth0Client.handleRedirectCallback();
   const auth0User = await auth0Client.getUser();
   initialised(auth0User);
