@@ -52,16 +52,18 @@ var createAuthStore = (options) => createStore()((set, get) => ({
     }))
   },
   actions: {
-    loginWithRedirect: (loginOptions) => {
+    loginWithRedirect: async (loginOptions) => {
       const { auth0Client } = get();
-      return auth0Client.loginWithRedirect(loginOptions);
+      await auth0Client.loginWithRedirect(loginOptions);
+      return null;
     },
-    logout: (logoutOptions) => {
+    logout: async (logoutOptions) => {
       const { auth0Client } = get();
-      return auth0Client.logout({
+      await auth0Client.logout({
         ...logoutOptions,
         logoutParams: { returnTo: defaultLogoutReturnTo, ...logoutOptions?.logoutParams }
       });
+      return null;
     },
     getAccessTokenSilently: async (getTokenOptions) => {
       const { auth0Client } = get();

@@ -63,7 +63,7 @@ declare type AuthState = {
          *
          * @param options
          */
-        loginWithRedirect: (loginOptions?: RedirectLoginOptions) => Promise<void>;
+        loginWithRedirect: (loginOptions?: RedirectLoginOptions) => Promise<null>;
         /**
          * ```js
          * await logout(options);
@@ -72,7 +72,7 @@ declare type AuthState = {
          * Clears the application session and performs a redirect to the login route defind in Auth0
          *
          * */
-        logout: (logoutOptions?: LogoutOptions) => Promise<void>;
+        logout: (logoutOptions?: LogoutOptions) => Promise<null>;
         /**
          * ```js
          * const accessToken = await getAccessTokenSilently(options);
@@ -178,8 +178,8 @@ declare const authorize: <LoaderReturn = Response>(authStore: zustand.StoreApi<{
         initialised: (user?: User$1 | undefined) => void;
     };
     actions: {
-        loginWithRedirect: (loginOptions?: _auth0_auth0_spa_js.RedirectLoginOptions<any> | undefined) => Promise<void>;
-        logout: (logoutOptions?: _auth0_auth0_spa_js.LogoutOptions | undefined) => Promise<void>;
+        loginWithRedirect: (loginOptions?: _auth0_auth0_spa_js.RedirectLoginOptions<any> | undefined) => Promise<null>;
+        logout: (logoutOptions?: _auth0_auth0_spa_js.LogoutOptions | undefined) => Promise<null>;
         getAccessTokenSilently: (getTokenOptions?: _auth0_auth0_spa_js.GetTokenSilentlyOptions | undefined) => Promise<string>;
         getIdTokenClaims: () => Promise<_auth0_auth0_spa_js.IdToken | undefined>;
         updateUser: (user: {
@@ -232,7 +232,7 @@ declare const authorize: <LoaderReturn = Response>(authStore: zustand.StoreApi<{
     };
 }>, callback: (input: {
     user: User;
-}) => Promise<LoaderReturn>, returnTo?: string) => Promise<void | LoaderReturn>;
+}) => Promise<LoaderReturn>, returnTo?: string) => Promise<LoaderReturn | null>;
 /**
  * This is a policy function used to handle the redirection from Auth0
  * @param authStore
@@ -283,8 +283,8 @@ declare const handleRedirectCallback: <LoaderReturn = Response>(authStore: zusta
         initialised: (user?: User$1 | undefined) => void;
     };
     actions: {
-        loginWithRedirect: (loginOptions?: _auth0_auth0_spa_js.RedirectLoginOptions<any> | undefined) => Promise<void>;
-        logout: (logoutOptions?: _auth0_auth0_spa_js.LogoutOptions | undefined) => Promise<void>;
+        loginWithRedirect: (loginOptions?: _auth0_auth0_spa_js.RedirectLoginOptions<any> | undefined) => Promise<null>;
+        logout: (logoutOptions?: _auth0_auth0_spa_js.LogoutOptions | undefined) => Promise<null>;
         getAccessTokenSilently: (getTokenOptions?: _auth0_auth0_spa_js.GetTokenSilentlyOptions | undefined) => Promise<string>;
         getIdTokenClaims: () => Promise<_auth0_auth0_spa_js.IdToken | undefined>;
         updateUser: (user: {
