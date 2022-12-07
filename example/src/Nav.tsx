@@ -1,4 +1,4 @@
-import { useLocation, Link } from 'react-router-dom'
+import { useLocation, Link, useNavigate } from 'react-router-dom'
 import { faker } from '@faker-js/faker'
 
 import { authStore, useAuthActions, useAuthenticated, useUser } from './auth'
@@ -14,6 +14,7 @@ export function Nav() {
   const user = useUser()
   const { logout, loginWithRedirect, updateUser } = useAuthActions()
   const { pathname } = useLocation()
+  const navigate = useNavigate()
 
   return (
     <nav>
@@ -84,7 +85,7 @@ export function Nav() {
               <button
                 className="btn btn-outline-success"
                 id="login"
-                onClick={() => loginWithRedirect()}
+                onClick={() => navigate('/login')}
               >
                 login
               </button>
@@ -96,9 +97,7 @@ export function Nav() {
                   className="btn btn-outline-success"
                   id="login-org"
                   onClick={() =>
-                    loginWithRedirect({
-                      authorizationParams: { organization: import.meta.env.VITE_AUTH0_ORG_ID },
-                    })
+                    navigate(`/login?organization=${import.meta.env.VITE_AUTH0_ORG_ID}`)
                   }
                 >
                   login into organization
