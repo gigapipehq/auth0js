@@ -6,7 +6,7 @@ import {
   type RedirectLoginOptions,
   Auth0Client,
 } from '@auth0/auth0-spa-js'
-import { type StoreApi, type UseBoundStore, createStore } from 'zustand'
+import { createStore } from 'zustand'
 
 import type { Auth0User, User } from './types'
 import { defaultLogoutReturnTo, tokenError, transformSnakeObjectKeysToCamel } from './utils'
@@ -102,11 +102,10 @@ type AuthState = {
  * }
  * ```
  *
- * Then you can use the `createAuthHook` function to create Zustand's custom hook.
+ * Then you can use the `useStore` hook from Zustand to create the custom hooks (see example).
  * ```js
- * const useAuth = createAuthHook(authStore)
+ * const useUser = useStore(authStore, state => state.user)
  * ```
- * Instead of using this hook create atomic pieces of the state (see example)
  *
  */
 export const createAuthStore = (options: Auth0ClientOptions) =>
@@ -178,4 +177,3 @@ export const createAuthStore = (options: Auth0ClientOptions) =>
   }))
 
 export type AuthStore = ReturnType<typeof createAuthStore>
-export type UseAuthHook = UseBoundStore<StoreApi<AuthState>>
