@@ -139,10 +139,10 @@ var handleRedirectCallback = async (authStore, callback) => {
 };
 
 // src/index.ts
-import { default as default2 } from "zustand";
+import { create } from "zustand";
 export {
   authorize,
-  default2 as createAuthHook,
+  create as createAuthHook,
   createAuthStore,
   handleRedirectCallback
 };

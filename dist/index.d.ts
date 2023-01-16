@@ -3,7 +3,7 @@ import { User as User$1, Auth0ClientOptions, Auth0Client, RedirectLoginOptions, 
 export { CacheLocation, Cacheable, GetTokenSilentlyOptions, GetTokenWithPopupOptions, ICache, IdToken, InMemoryCache, LocalStorageCache, LogoutOptions, LogoutUrlOptions, PopupConfigOptions, PopupLoginOptions } from '@auth0/auth0-spa-js';
 import * as zustand from 'zustand';
 import { StoreApi } from 'zustand';
-export { default as createAuthHook } from 'zustand';
+export { create as createAuthHook } from 'zustand';
 
 /**
  * The state of the application before the user was redirected to the login page.
