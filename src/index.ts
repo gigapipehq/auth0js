@@ -15,4 +15,4 @@ export type {
   PopupConfigOptions,
   PopupLoginOptions,
 } from '@auth0/auth0-spa-js'
-export { default as createAuthHook } from 'zustand'
+export { create as createAuthHook } from 'zustand'
