@@ -21,7 +21,6 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 var src_exports = {};
 __export(src_exports, {
   authorize: () => authorize,
-  createAuthHook: () => import_zustand2.create,
   createAuthStore: () => createAuthStore,
   handleRedirectCallback: () => handleRedirectCallback
 });
@@ -164,13 +163,9 @@ var handleRedirectCallback = async (authStore, callback) => {
   initialised(auth0User);
   return callback({ appState });
 };
-
-// src/index.ts
-var import_zustand2 = require("zustand");
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   authorize,
-  createAuthHook,
   createAuthStore,
   handleRedirectCallback
 });

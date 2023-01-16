@@ -1,9 +1,7 @@
+import * as zustand from 'zustand';
 import * as _auth0_auth0_spa_js from '@auth0/auth0-spa-js';
 import { User as User$1, Auth0ClientOptions, Auth0Client, RedirectLoginOptions, LogoutOptions, GetTokenSilentlyOptions, IdToken } from '@auth0/auth0-spa-js';
 export { CacheLocation, Cacheable, GetTokenSilentlyOptions, GetTokenWithPopupOptions, ICache, IdToken, InMemoryCache, LocalStorageCache, LogoutOptions, LogoutUrlOptions, PopupConfigOptions, PopupLoginOptions } from '@auth0/auth0-spa-js';
-import * as zustand from 'zustand';
-import { StoreApi } from 'zustand';
-export { create as createAuthHook } from 'zustand';
 
 /**
  * The state of the application before the user was redirected to the login page.
@@ -118,14 +116,13 @@ declare type AuthState = {
  * }
  * ```
  *
- * Then you can use the `createAuthHook` function to create Zustand's custom hook.
+ * Then you can use the `useStore` hook from Zustand to create the custom hooks (see example).
  * ```js
- * const useAuth = createAuthHook(authStore)
+ * const useUser = useStore(authStore, state => state.user)
  * ```
- * Instead of using this hook create atomic pieces of the state (see example)
  *
  */
-declare const createAuthStore: (options: Auth0ClientOptions) => StoreApi<AuthState>;
+declare const createAuthStore: (options: Auth0ClientOptions) => zustand.StoreApi<AuthState>;
 
 /**
  * This is a policy function used to authorize a request in a loader function from react-router

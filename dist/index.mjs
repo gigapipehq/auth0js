@@ -137,12 +137,8 @@ var handleRedirectCallback = async (authStore, callback) => {
   initialised(auth0User);
   return callback({ appState });
 };
-
-// src/index.ts
-import { create } from "zustand";
 export {
   authorize,
-  create as createAuthHook,
   createAuthStore,
   handleRedirectCallback
 };
