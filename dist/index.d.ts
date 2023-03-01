@@ -14,17 +14,17 @@ interface AppState {
 /**
  * Custom utility type to convert snake_cased strings to camelCased
  */
-declare type SnakeToCamelCase<S extends string> = S extends `${infer T}_${infer U}` ? `${T}${Capitalize<SnakeToCamelCase<U>>}` : S;
+type SnakeToCamelCase<S extends string> = S extends `${infer T}_${infer U}` ? `${T}${Capitalize<SnakeToCamelCase<U>>}` : S;
 /**
  * Custom type utility to create a derived type by transforming all INPUT keys to camelCase, including nested objects, arrays and sets
  */
-declare type CamelCasedProperties<INPUT> = INPUT extends Function ? INPUT : INPUT extends Array<infer U> ? Array<CamelCasedProperties<U>> : INPUT extends Set<infer U> ? Set<CamelCasedProperties<U>> : {
+type CamelCasedProperties<INPUT> = INPUT extends Function ? INPUT : INPUT extends Array<infer U> ? Array<CamelCasedProperties<U>> : INPUT extends Set<infer U> ? Set<CamelCasedProperties<U>> : {
     [K in keyof INPUT as SnakeToCamelCase<K>]: CamelCasedProperties<INPUT[K]>;
 };
 /**
  * User object type from Auth0 SDK converted to camelCase notation
  */
-declare type Auth0User = CamelCasedProperties<User>;
+type Auth0User = CamelCasedProperties<User>;
 
 interface AuthState<TUser extends Auth0User = Auth0User> {
     /**
@@ -179,7 +179,7 @@ declare const createAuthStore: <TUser extends {
     updatedAt?: string | undefined;
     sub?: string | undefined;
 }>(options: Auth0ClientOptions) => StoreApi<AuthState<TUser>>;
-declare type AuthStore<TUser extends Auth0User> = StoreApi<AuthState<TUser>>;
+type AuthStore<TUser extends Auth0User> = StoreApi<AuthState<TUser>>;
 
 /**
  * This is a policy function used to authorize a request in a loader function from react-router
