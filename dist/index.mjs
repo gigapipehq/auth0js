@@ -46,7 +46,7 @@ var createAuthStore = (options) => createStore()((set, get) => ({
     initialised: (user) => set((state) => ({
       ...state,
       isAuthenticated: !!user,
-      user: user ? transformSnakeObjectKeysToCamel(user) : user,
+      user,
       isLoading: false,
       error: void 0
     }))
@@ -124,7 +124,7 @@ var authorize = async (authStore, callback, returnTo = defaultReturnTo) => {
       }
     });
   }
-  initialised(auth0User);
+  initialised(transformSnakeObjectKeysToCamel(auth0User));
   return callback({ user: transformSnakeObjectKeysToCamel(auth0User) });
 };
 var handleRedirectCallback = async (authStore, callback) => {
@@ -134,7 +134,7 @@ var handleRedirectCallback = async (authStore, callback) => {
   } = authStore.getState();
   const { appState } = await auth0Client.handleRedirectCallback();
   const auth0User = await auth0Client.getUser();
-  initialised(auth0User);
+  initialised(auth0User ? transformSnakeObjectKeysToCamel(auth0User) : void 0);
   return callback({ appState });
 };
 export {

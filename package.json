@@ -68,7 +68,7 @@
     "react-dom": "^16.11.0 || ^17 || ^18"
   },
   "dependencies": {
-    "@auth0/auth0-spa-js": "2.0.2",
-    "zustand": "4.3.2"
+    "@auth0/auth0-spa-js": "2.0.4",
+    "zustand": "4.3.5"
   }
 }
