@@ -1,10 +1,10 @@
 import {
+  Auth0Client,
   type Auth0ClientOptions,
   type GetTokenSilentlyOptions,
   type IdToken,
   type LogoutOptions,
   type RedirectLoginOptions,
-  Auth0Client,
 } from '@auth0/auth0-spa-js'
 import { createStore, StoreApi } from 'zustand'
 
@@ -86,7 +86,10 @@ interface AuthState<TUser extends Auth0User = Auth0User> {
      *
      * A function to update the user in the store or force a fetching of the information from Auth0
      */
-    updateUser: (user: TUser, options?: { fetchNewToken?: boolean }) => Promise<TUser | undefined>
+    updateUser: (
+      user: Partial<TUser>,
+      options?: { fetchNewToken?: boolean },
+    ) => Promise<TUser | undefined>
   }
 }
 
@@ -180,7 +183,7 @@ export const createAuthStore = <TUser extends Auth0User = Auth0User>(options: Au
           return get().user
         }
         const currentUser = get().user
-        const newUser = { ...currentUser, ...user }
+        const newUser = { ...currentUser, ...user } as TUser
         set(state => ({ ...state, user: newUser }))
         return newUser
       },

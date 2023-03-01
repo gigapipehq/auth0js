@@ -101,7 +101,7 @@ interface AuthState<TUser extends Auth0User = Auth0User> {
          *
          * A function to update the user in the store or force a fetching of the information from Auth0
          */
-        updateUser: (user: TUser, options?: {
+        updateUser: (user: Partial<TUser>, options?: {
             fetchNewToken?: boolean;
         }) => Promise<TUser | undefined>;
     };
