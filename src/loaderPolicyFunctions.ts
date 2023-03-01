@@ -1,5 +1,5 @@
 import { type AuthStore } from './authStore'
-import type { AppState, Auth0User, User } from './types'
+import type { AppState, Auth0User, SnakeCasedProperties } from './types'
 import { defaultReturnTo, transformSnakeObjectKeysToCamel } from './utils'
 
 /**
@@ -21,9 +21,9 @@ import { defaultReturnTo, transformSnakeObjectKeysToCamel } from './utils'
  *  }
  * ```
  */
-export const authorize = async <LoaderReturn = Response>(
-  authStore: AuthStore,
-  callback: (input: { user: User }) => Promise<LoaderReturn>,
+export const authorize = async <TUser extends Auth0User = Auth0User>(
+  authStore: AuthStore<TUser>,
+  callback: (input: { user: TUser }) => Promise<Response>,
   returnTo = defaultReturnTo,
 ) => {
   const {
@@ -32,10 +32,10 @@ export const authorize = async <LoaderReturn = Response>(
     actions: { loginWithRedirect },
     _actions: { initialised },
   } = authStore.getState()
-  if (user) return callback({ user })
 
+  if (user) return callback({ user })
   await auth0Client.checkSession()
-  const auth0User = await auth0Client.getUser<Auth0User>()
+  const auth0User = await auth0Client.getUser<SnakeCasedProperties<TUser>>()
 
   if (!auth0User) {
     return loginWithRedirect({
@@ -48,9 +48,9 @@ export const authorize = async <LoaderReturn = Response>(
       },
     })
   }
-  initialised(auth0User)
+  initialised(transformSnakeObjectKeysToCamel(auth0User) as TUser)
 
-  return callback({ user: transformSnakeObjectKeysToCamel(auth0User) })
+  return callback({ user: transformSnakeObjectKeysToCamel(auth0User) as TUser })
 }
 
 /**
@@ -71,9 +71,9 @@ export const authorize = async <LoaderReturn = Response>(
  *  }
  * ```
  */
-export const handleRedirectCallback = async <LoaderReturn = Response>(
-  authStore: AuthStore,
-  callback: (input: { appState?: AppState }) => Promise<LoaderReturn>,
+export const handleRedirectCallback = async <TUser extends Auth0User = Auth0User>(
+  authStore: AuthStore<TUser>,
+  callback: (input: { appState?: AppState }) => Promise<Response>,
 ) => {
   const {
     auth0Client,
@@ -81,8 +81,9 @@ export const handleRedirectCallback = async <LoaderReturn = Response>(
   } = authStore.getState()
 
   const { appState } = await auth0Client.handleRedirectCallback<AppState>()
-  const auth0User = await auth0Client.getUser<Auth0User>()
-  initialised(auth0User)
+  const auth0User = await auth0Client.getUser<SnakeCasedProperties<TUser>>()
+
+  initialised(auth0User ? (transformSnakeObjectKeysToCamel(auth0User) as TUser) : undefined)
 
   return callback({ appState })
 }

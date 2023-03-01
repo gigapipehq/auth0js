@@ -6,12 +6,12 @@ import {
   type RedirectLoginOptions,
   Auth0Client,
 } from '@auth0/auth0-spa-js'
-import { createStore } from 'zustand'
+import { createStore, StoreApi } from 'zustand'
 
-import type { Auth0User, User } from './types'
+import type { Auth0User, SnakeCasedProperties } from './types'
 import { defaultLogoutReturnTo, tokenError, transformSnakeObjectKeysToCamel } from './utils'
 
-type AuthState = {
+interface AuthState<TUser extends Auth0User = Auth0User> {
   /**
    * Auth0 SDK for SPAs
    */
@@ -27,13 +27,16 @@ type AuthState = {
   error?: Error
   /**
    * The user object
+   *
+   * You can provide it via a generic type or it will default to the User from the Auth0 SDK
+   * @default Auth0User
    */
-  user?: User
+  user?: TUser
   /**
    * Internal action DO NOT USE
    */
   _actions: {
-    initialised: (user?: Auth0User) => void
+    initialised: (user?: TUser) => void
   }
   /**
    * All available actions to interact with Auth0
@@ -76,14 +79,14 @@ type AuthState = {
      */
     getIdTokenClaims: () => Promise<IdToken | undefined>
     /**
-     *    * ```js
-     * const user =  await updateUser({ givenName: 'Alfredo });
-     * const user =  await updateUser({ givenName: 'Alfredo }, { fetchNewToken: true });
+     * ```js
+     * const user =  await updateUser({ givenName: 'Alfredo' });
+     * const user =  await updateUser({ givenName: 'Alfredo' }, { fetchNewToken: true });
      * ```
      *
      * A function to update the user in the store or force a fetching of the information from Auth0
      */
-    updateUser: (user: User, options?: { fetchNewToken?: boolean }) => Promise<User | undefined>
+    updateUser: (user: TUser, options?: { fetchNewToken?: boolean }) => Promise<TUser | undefined>
   }
 }
 
@@ -91,7 +94,7 @@ type AuthState = {
  *  Function factory to create the Zustand store that contains all the state and the different auth methods.
  *  Use this store outside the React tree (ie. `const { isAuthenticated, loginWithRedirect } = authStore.getState()`) or if you only need access to its methods.
  * ```js
- * const authStore = createAuthStore({
+ * const authStore = createAuthStore<CustomUserType>({
  *  domain: import.meta.env.VITE_AUTH0_DOMAIN,
  *  clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
  *  useRefreshTokens: true,
@@ -106,10 +109,17 @@ type AuthState = {
  * ```js
  * const useUser = useStore(authStore, state => state.user)
  * ```
+ * Accepts an optional generic to customize the type for the user object. Use it only if you have extended the IDToken in Auth0 or you use the organizations feature
  *
+ * ```ts
+ *  interface CustomUserType extends Auth0User {
+ *    connection: string
+ *    orgId?: string
+ *  }
+ * ```
  */
-export const createAuthStore = (options: Auth0ClientOptions) =>
-  createStore<AuthState>()((set, get) => ({
+export const createAuthStore = <TUser extends Auth0User = Auth0User>(options: Auth0ClientOptions) =>
+  createStore<AuthState<TUser>>()((set, get) => ({
     isLoading: true,
     isAuthenticated: false,
     auth0Client: new Auth0Client(options),
@@ -118,7 +128,7 @@ export const createAuthStore = (options: Auth0ClientOptions) =>
         set(state => ({
           ...state,
           isAuthenticated: !!user,
-          user: user ? transformSnakeObjectKeysToCamel(user) : user,
+          user,
           isLoading: false,
           error: undefined,
         })),
@@ -146,9 +156,10 @@ export const createAuthStore = (options: Auth0ClientOptions) =>
         } catch (error: any) {
           throw tokenError(error)
         } finally {
-          const auth0User = await auth0Client.getUser<Auth0User>()
+          const auth0User = await auth0Client.getUser<SnakeCasedProperties<TUser>>()
           if (auth0User) {
-            const user = transformSnakeObjectKeysToCamel(auth0User)
+            const user = transformSnakeObjectKeysToCamel(auth0User) as TUser
+
             set(state =>
               state.user?.updatedAt === user.updatedAt
                 ? state
@@ -176,4 +187,4 @@ export const createAuthStore = (options: Auth0ClientOptions) =>
     },
   }))
 
-export type AuthStore = ReturnType<typeof createAuthStore>
+export type AuthStore<TUser extends Auth0User> = StoreApi<AuthState<TUser>>

@@ -1,6 +1,6 @@
 export { createAuthStore } from './authStore'
 export { authorize, handleRedirectCallback } from './loaderPolicyFunctions'
-export type { User } from './types'
+export type { Auth0User } from './types'
 export type {
   Cacheable,
   CacheLocation,

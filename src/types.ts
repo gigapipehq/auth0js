@@ -1,9 +1,9 @@
-import { type User as Auth0User } from '@auth0/auth0-spa-js'
+import { type User } from '@auth0/auth0-spa-js'
 
 /**
  * The state of the application before the user was redirected to the login page.
  */
-export type AppState = {
+export interface AppState {
   returnTo?: string
   isOrganizationLogin?: boolean
   isInviteLogin?: boolean
@@ -48,5 +48,7 @@ export type CamelCasedProperties<INPUT> = INPUT extends Function
   : // @ts-expect-error
     { [K in keyof INPUT as SnakeToCamelCase<K>]: CamelCasedProperties<INPUT[K]> }
 
-export type User = CamelCasedProperties<Auth0User>
-export { type Auth0User }
+/**
+ * User object type from Auth0 SDK converted to camelCase notation
+ */
+export type Auth0User = CamelCasedProperties<User>
