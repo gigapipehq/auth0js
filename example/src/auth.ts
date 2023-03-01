@@ -1,7 +1,12 @@
-import { createAuthStore } from '@gigapipe/auth0js'
+import { createAuthStore, Auth0User } from '@gigapipe/auth0js'
 import { useStore } from 'zustand'
 
-export const authStore = createAuthStore({
+interface CustomUser extends Auth0User {
+  connection: string
+  orgId?: string
+}
+
+export const authStore = createAuthStore<CustomUser>({
   domain: import.meta.env.VITE_AUTH0_DOMAIN,
   clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
   useRefreshTokens: true,
